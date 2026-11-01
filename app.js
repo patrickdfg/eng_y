@@ -204,8 +204,9 @@ function splitText(raw){
  return raw.split(/\r?\n/).flatMap(line=>{
    const [en,...ko]=line.split('||');const english=en.trim();if(!english)return[];
    if(ko.length)return[{en:english,ko:ko.join('||').trim()}];
-   const segments=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter('en',{granularity:'sentence'}).segment(english)].map(s=>s.segment.trim()):english.split(/(?<=[.!?])\s+/);
-   return segments.filter(Boolean).map(en=>({en,ko:''}));
+   const protectedEnglish=english.replace(/\b(Mr|Mrs|Ms|Dr)\./g, '$1\uF111');
+   const segments=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter('en',{granularity:'sentence'}).segment(protectedEnglish)].map(s=>s.segment.trim()):protectedEnglish.split(/(?<=[.!?])\s+/);
+   return segments.filter(Boolean).map(en=>({en:en.replace(/\uF111/g,'.'),ko:''}));
  });
 }
 function saveText(){
