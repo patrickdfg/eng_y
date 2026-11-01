@@ -20,3 +20,72 @@
 .word-picture{width:150px;height:92px;color:var(--accent);display:block;margin:4px auto 8px}.flashcard{touch-action:pan-y;user-select:none}.flashcard:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.swipe-hint{text-align:center;color:var(--muted);font-size:11px;margin:10px 0}.word-examples{margin-top:30px}.word-example{border:1px solid var(--line);border-radius:16px;padding:15px 20px;margin:10px 0;background:white}.example-label{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--accent);font-weight:700}.word-example>p[lang=en]{font-size:18px;line-height:1.7;margin:7px 0}.word-example .example-ko{font-size:12px;color:var(--muted);line-height:1.7;margin:0}.grammar-toolbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;margin:18px 0}.grammar-detail{border:1px solid var(--line);border-radius:16px;margin:14px 0;background:white}.grammar-detail>summary{cursor:pointer;padding:19px;font-weight:700;font-size:15px;line-height:1.7}.grammar-detail>summary>span:last-child{display:block;font-size:10px;font-weight:400;color:var(--muted);margin-left:42px}.grammar-detail-body{padding:0 22px 20px}.grammar-detail-body>p{line-height:1.9;font-size:13px}.grammar-tip{background:var(--accent-soft);border-radius:12px;padding:15px}.grammar-detail .example{margin:12px 0}.original-links{padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--accent-soft);margin-bottom:28px}.original-links h3{margin:10px 0}.original-links p{font-size:12px;line-height:1.8;color:var(--muted)}.original-links .actions{flex-wrap:wrap;gap:8px}.original-links a{text-decoration:none;display:inline-flex;align-items:center}.full-passage{border:1px solid var(--line);border-radius:18px;background:white;padding:26px}.full-passage .en{font-size:21px;line-height:2.1;margin:0;white-space:pre-wrap}.passage-translation{margin-top:24px;border-top:1px solid var(--line);padding-top:15px;color:var(--muted);font-size:13px;line-height:1.9}.voice-status{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-soft);padding:10px 14px;border-radius:12px;margin:0 0 18px;color:var(--accent);font-size:12px;line-height:1.6}.voice-status[hidden]{display:none}.voice-status button{flex-shrink:0}.segmented [aria-pressed=true]{background:var(--accent);color:white;border-radius:8px}.word-card .mini-picture{font-size:34px;display:block;margin:8px 0}.word-card details{margin-top:15px}.word-card details summary{font-size:11px;cursor:pointer;color:var(--accent)}.word-card .word-examples{margin-top:10px}.word-card .word-examples>.section-top{display:none}.word-card .word-example{padding:10px}.word-card .word-example>p[lang=en]{font-size:14px}.word-card .word-example .example-ko{font-size:11px}@media(max-width:720px){.word-picture{height:82px;width:135px}.flashcard{padding-top:43px;min-height:300px}.word-example{padding:13px 15px}.word-example>p[lang=en]{font-size:17px}.grammar-toolbar .primary-button{font-size:11px}.grammar-detail>summary{font-size:14px}.grammar-detail-body{padding:0 15px 17px}.original-links{padding:18px}.full-passage{padding:18px}.full-passage .en{font-size:18px}.voice-status{font-size:11px}.word-grid{grid-template-columns:1fr}}
 
 .material-sections{margin-bottom:24px}.full-passage .en+.en{margin-top:14px}
+
+/* 단어 카드와 예문 3개를 함께 보여 주는 학습 화면입니다. */
+.word-study-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.word-study-layout .word-examples{margin-top:0}
+.word-study-layout .word-examples .section-top{margin-bottom:6px}
+.word-study-layout .word-example{margin:6px 0;padding:10px 13px;border-radius:10px}
+.word-study-layout .word-example>p[lang=en]{font-size:15px;line-height:1.4;margin:3px 0}
+.word-study-layout .word-example .example-ko{font-size:11px;line-height:1.45}
+.word-study-layout .word-examples .private-note{margin:8px 0}
+.word-study-layout .flashcard{min-height:230px;padding:34px 12px 15px}
+.word-study-layout .word-picture{width:108px;height:68px;margin:2px auto}
+.word-study-layout .flashcard h4{font-size:clamp(26px,3vw,36px);margin:4px 0}
+.word-study-layout .flash-question{margin-bottom:8px}
+.word-study-layout .flash-meaning{font-size:17px;margin:0 0 6px}
+.word-study-layout .reveal-button{padding:6px 11px}
+.word-study-layout .swipe-hint{margin:6px 0;font-size:10px}
+.word-study-layout .flash-assess{margin-top:8px;gap:7px}
+.word-study-layout .flash-assess button{min-height:38px;padding:8px;font-size:10px}
+.word-study-layout .flash-pagination{margin-top:7px;gap:10px}
+@media(min-width:1280px){
+ .word-study-layout{grid-template-columns:minmax(215px,.85fr) minmax(0,1.15fr);gap:15px}
+}
+@media(max-width:720px){
+ body.word-study-view .sidebar{padding:8px 14px 6px}
+ body.word-study-view .sidebar .brand{font-size:17px;gap:7px}
+ body.word-study-view .sidebar .brand-mark{height:27px;width:27px;font-size:22px}
+ body.word-study-view .book-label{top:9px;right:14px}
+ body.word-study-view .grades{margin:5px 0 3px}
+ body.word-study-view .grade{padding:4px}
+ body.word-study-view .lesson-disclosure summary{font-size:9px}
+ body.word-study-view .topbar{height:32px;padding:0 14px}
+ body.word-study-view main{padding:7px 12px 0}
+ body.word-study-view:not(.home-view) .learning-layout{margin-top:0}
+ body.word-study-view .lesson-heading{margin-bottom:2px}
+ body.word-study-view .lesson-heading h2{font-size:17px;margin:0}
+ body.word-study-view .lesson-heading p:last-child,body.word-study-view .lesson-heading>.outline-button,body.word-study-view .content-note{display:none}
+ body.word-study-view .tabs{gap:13px;margin-bottom:6px}
+ body.word-study-view .tab{padding:5px 0;font-size:10px}
+ body.word-study-view .section-top{margin-bottom:5px}
+ body.word-study-view .section-top h3{font-size:12px}
+ body.word-study-view .section-top .eyebrow{display:none}
+ body.word-study-view .flash-progress{font-size:9px}
+ body.word-study-view progress{margin:3px 0 7px}
+ body.word-study-view .word-study-layout{gap:7px}
+ body.word-study-view .word-study-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 7px;align-items:center}
+ body.word-study-view .word-study-card>.flashcard{grid-column:1/-1}
+ body.word-study-view .flashcard{min-height:86px;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:3px 8px;padding:9px 42px 9px 10px}
+ body.word-study-view .flashcard .flash-label{display:none}
+ body.word-study-view .flashcard .card-sound{right:8px;top:50%;transform:translateY(-50%)}
+ body.word-study-view .flashcard .word-picture{width:66px;height:52px;margin:0}
+ body.word-study-view .flashcard h4{font-size:25px;margin:0}
+ body.word-study-view .flashcard .flash-meaning{font-size:14px;margin:0}
+ body.word-study-view .flashcard .flash-question{font-size:10px;margin:0}
+ body.word-study-view .flashcard .flash-hint{display:none}
+ body.word-study-view .flashcard .reveal-button{min-height:27px;font-size:9px;padding:4px 7px}
+ body.word-study-view .word-study-card>.swipe-hint{display:none}
+ body.word-study-view .flash-assess{grid-column:1;margin:0;gap:5px}
+ body.word-study-view .flash-assess button{padding:5px;min-height:30px;font-size:9px}
+ body.word-study-view .flash-assess small{display:none}
+ body.word-study-view .flash-pagination{grid-column:2;margin:0;gap:4px}
+ body.word-study-view .flash-pagination .icon-button{width:28px;height:30px}
+ body.word-study-view .word-examples .section-top{margin-bottom:2px}
+ body.word-study-view .word-example{margin:4px 0;padding:6px 9px;border-radius:9px}
+ body.word-study-view .word-example>p[lang=en]{font-size:13px;line-height:1.35;margin:2px 0}
+ body.word-study-view .word-example .example-ko{font-size:10px;line-height:1.3}
+ body.word-study-view .example-label{font-size:9px}
+ body.word-study-view .example-label .icon-button{width:29px;height:28px}
+ body.word-study-view .word-examples .private-note,body.word-study-view #panel>.private-note{display:none}
+}
