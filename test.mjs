@@ -10,7 +10,7 @@ function context() {
   const stored=new Map();
   const c=vm.createContext({window:{addEventListener(){}},document,location:{hash:''},localStorage:{getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)},history:{pushState(){}},console,Intl,URL,Blob,Date,setTimeout(){},clearTimeout(){},confirm:()=>true,navigator:{}});
   vm.runInContext(readFileSync('content.js','utf8'),c);
-  for(const file of ['learning-data.js','learning.js','audio-manifest.js','native-audio.js','dashboard.js'])vm.runInContext(readFileSync(file,'utf8'),c);
+  for(const file of ['learning-data.js','learning.js','translations.js','audio-manifest.js','native-audio.js','dashboard.js'])vm.runInContext(readFileSync(file,'utf8'),c);
   vm.runInContext(readFileSync('app.js','utf8'),c);
   return {run:s=>vm.runInContext(s,c),nodes,stored};
 }
@@ -195,4 +195,21 @@ test('기본 본문은 등록 안내나 PDF 대신 전체 글과 원문 예문�
  assert.ok(panel.includes('교과서 본문·대화 자료'));assert.ok(!panel.includes('교과서 원문으로 연결'));
  assert.ok(!panel.includes('내 본문 등록'));assert.ok(!panel.includes('<iframe'));
  assert.equal(run('units.some(u=>{route={grade:u.grade,number:u.number,tab:"words"};return u.words.some(w=>wordExamples(w)[0].source==="교과서 본문에서")})'),true);
+});
+
+
+test('첫 단원 본문은 해석 보기와 전체 글 모두 한국어 해석을 제공한다',()=>{
+ const {run}=context();
+ assert.equal(run('B.texts[units[0].id].reading.every(r=>Boolean(translationFor(r)))'),true);
+ run('route={grade:1,number:1,tab:"reading"};readingSection="body";readingLayout="sentences";translations=true');
+ assert.ok(run('expandedReadingPanel().includes("class=\\"ko\\"")'));
+ run('readingLayout="passage"');
+ assert.ok(run('expandedReadingPanel().includes("passage-translation")'));
+ run('translations=false');
+ assert.ok(!run('expandedReadingPanel().includes("passage-translation")'));
+});
+test('인물 호칭 뒤에서 문장을 잘못 나누지 않는다',()=>{
+ const {run}=context();
+ assert.equal(run('splitText("Mrs. Schmidt is kind. I know her.").length'),2);
+ assert.equal(run('splitText("Mrs. Schmidt is kind.")[0].en'),'Mrs. Schmidt is kind.');
 });
