@@ -14,4 +14,5 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
 
 .tabs{scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.reading-next{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:22px}
+@media(max-width:720px){body:not(.home-view) .page-heading{display:none}.flashcard{min-height:260px}}
 @media(max-width:720px){body:not(.home-view) .page-heading p,body:not(.home-view) .page-heading time{display:none}body:not(.home-view) .page-heading{margin-bottom:22px}body:not(.home-view) .learning-layout{margin-top:20px}.reading-next button{font-size:10px;padding:10px 12px}}
