@@ -1,15 +1,15 @@
-// 기본 자료는 MP3, 직접 입력한 문장은 기기 안에서 같은 미국식 AI 음성으로 생성합니다.
+// 등록된 MP3를 재생하고 MP3가 없는 교과서 문장은 기기의 영어 음성으로 읽습니다.
 'use strict';
 let nativePlayer=null;
-let nativeWorker=null;
 let nativeRequest=0;
-let nativePending=null;
-const nativeClips=new Map();
+let nativeUtterance=null;
 function voiceStatus(message){const box=document.querySelector('#voiceStatus');if(!box)return;box.hidden=!message;document.querySelector('#voiceMessage').textContent=message;}
 function stopNativeAudio(){
- nativeRequest++;nativePending=null;
+ nativeRequest++;
  if(nativePlayer){nativePlayer.onended=null;nativePlayer.onerror=null;nativePlayer.pause();nativePlayer.removeAttribute('src');nativePlayer.load();}
- nativeWorker?.postMessage({type:'cancel',id:nativeRequest});voiceStatus('');
+ if(window.speechSynthesis)window.speechSynthesis.cancel();
+ nativeUtterance=null;
+ voiceStatus('');
 }
 function playNativeClip(url,rate,onEnd,request){
  if(request!==nativeRequest)return;
@@ -20,27 +20,26 @@ function playNativeClip(url,rate,onEnd,request){
  voiceStatus('미국식 영어 · AI 음성 재생 중');
  player.play().catch(e=>{if(request===nativeRequest&&e.name!=='AbortError')voiceStatus('재생을 시작하려면 듣기 버튼을 다시 눌러 주세요.');});
 }
+function speakDeviceEnglish(text,rate,onEnd,request){
+ const synth=window.speechSynthesis;
+ if(!synth||!window.SpeechSynthesisUtterance){voiceStatus('이 브라우저는 기기 영어 음성 읽기를 지원하지 않습니다.');return;}
+ const utterance=new window.SpeechSynthesisUtterance(text);
+ const voices=synth.getVoices();
+ const voice=voices.find(v=>v.lang.toLowerCase()==='en-us'&&v.localService)
+  ||voices.find(v=>v.lang.toLowerCase()==='en-us')
+  ||voices.find(v=>v.lang.toLowerCase().startsWith('en'));
+ if(voice)utterance.voice=voice;
+ utterance.lang=voice?.lang||'en-US';
+ utterance.rate=rate;
+ utterance.onend=()=>{if(request===nativeRequest){nativeUtterance=null;voiceStatus('');onEnd?.();}};
+ utterance.onerror=()=>{if(request===nativeRequest){nativeUtterance=null;voiceStatus('기기 영어 음성이 재생되지 않았어요. 영어 음성 설정을 확인하고 다시 눌러 주세요.');}};
+ nativeUtterance=utterance;
+ voiceStatus('기기의 영어 음성 재생 중');
+ synth.speak(utterance);
+}
 function speakNative(text,rate,onEnd){
  stopNativeAudio();const request=nativeRequest;
- const clip=window.NATIVE_AUDIO?.[text]||nativeClips.get(text);
+ const clip=window.NATIVE_AUDIO?.[text];
  if(clip){playNativeClip(clip,rate,onEnd,request);return;}
- // 클릭 시 미디어 요소를 준비해 휴대폰에서도 생성 후 재생할 수 있게 합니다.
- nativePlayer||=new Audio();nativePlayer.src='data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAwF0AAIC7AAACABAAZGF0YQIAAAAAAA==';nativePlayer.play().catch(()=>{});
- voiceStatus('미국식 영어 음성 준비 중 · 처음에는 약 90MB를 내려받아요. 본문은 전송하지 않아요.');
- nativePending={request,text,rate,onEnd};
- if(!nativeWorker){
-  nativeWorker=new Worker('voice-worker.js?v=2542a2b433a7',{type:'module'});
-  nativeWorker.onmessage=({data})=>{
-   const pending=nativePending;if(!pending||data.id!==pending.request)return;
-   if(data.type==='progress'){voiceStatus('미국식 영어 음성 준비 중 · '+data.message);return;}
-   if(data.type==='error'){voiceStatus('음성을 준비하지 못했어요. 인터넷 연결과 브라우저를 확인한 뒤 다시 눌러 주세요.');nativePending=null;return;}
-   if(data.type==='audio'){
-    const url=URL.createObjectURL(data.blob);nativeClips.set(pending.text,url);
-    if(nativeClips.size>30){const first=nativeClips.keys().next().value;URL.revokeObjectURL(nativeClips.get(first));nativeClips.delete(first);}
-    nativePending=null;playNativeClip(url,pending.rate,pending.onEnd,pending.request);
-   }
-  };
-  nativeWorker.onerror=()=>{nativeWorker.terminate();nativeWorker=null;if(nativePending){nativePending=null;voiceStatus('이 브라우저에서 음성을 준비하지 못했어요. 최신 브라우저에서 다시 시도해 주세요.');}};
- }
- nativeWorker.postMessage({type:'speak',id:request,text});
+ speakDeviceEnglish(text,rate,onEnd,request);
 }
