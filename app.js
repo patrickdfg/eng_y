@@ -22,8 +22,8 @@ let recordingUrl = null;
 let recordingToken = 0;
 let recordingBusy = false;
 let toastTimer;
-const tabs = [['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문']];
-const pending = Array.from({length:8},(_,i)=>({id:`${B.code}3-${i+1}`,grade:3,number:i+1,title:`${i+1}과 · 내 본문`,topic:'2022 개정 단원 정보 확인 전',words:[],grammar:[],reading:[],pending:true}));
+const tabs = [['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문'],['resources','↗','교과서 자료']];
+const pending = Array.from({length:8},(_,i)=>({id:`${B.code}3-${i+1}`,grade:3,number:i+1,title:B.grade3Titles[i]||`${i+1}과 · 내 본문`,verified:!!B.grade3Titles[i],topic:B.grade3Titles[i]?'공식 단원명 확인 · 개인 본문으로 학습':'2022 개정 단원 정보 확인 전',words:[],grammar:[],reading:[],pending:true}));
 const units = [...B.units,...pending];
 function unit(){return units.find(u=>u.grade===route.grade&&u.number===route.number);}
 function save(){
@@ -85,7 +85,7 @@ function render(){
  $('#unitNumber').textContent=`중${u.grade} · LESSON ${String(u.number).padStart(2,'0')}`;
  $('#unitTitle').textContent=u.pending?(state.texts[u.id]?.title||u.title):u.title;
  $('#unitTopic').textContent=u.topic;
- $('#contentNote').textContent=u.pending?'2022 개정 교과서의 단원명·본문 대조 전입니다. 내 본문에서 개인 자료를 등록해 학습하세요.':'단원 주제에 맞춰 별도로 만든 연습 자료입니다. 교과서 원문·전체 어휘 목록은 포함하지 않습니다.';
+ $('#contentNote').textContent=u.verified?'공식 2022 개정 단원명을 확인했습니다. 교과서 자료에서 원본을 확인하고 내 본문에 등록해 학습하세요.':u.pending?'2022 개정 교과서의 단원명·본문 대조 전입니다. 내 본문에서 개인 자료를 등록해 학습하세요.':'단원 주제에 맞춰 별도로 만든 연습 자료입니다. 교과서 원문·전체 어휘 목록은 포함하지 않습니다.';
  $('#tabs').innerHTML=tabs.map(([id,icon,name])=>`<button class="tab ${route.tab===id?'active':''}" data-tab="${id}" aria-current="${route.tab===id?'page':'false'}"><span class="tab-icon" aria-hidden="true">${icon}</span>${name}</button>`).join('');
  stats();renderPanel();
 }
@@ -139,14 +139,14 @@ function speakingPanel(){
  speechIndex%=source.length;const r=source[speechIndex];
  return `<div class="section-top"><h3>듣고, 따라 말하고, 비교해요.</h3><span class="chip">${textReading?.length?'내 본문':'자체 예문'} ${speechIndex+1} / ${source.length}</span></div><div class="speaking-card"><p class="en" lang="en">${h(r.en)}</p>${r.ko?`<p class="ko">${h(r.ko)}</p>`:''}<div class="speaking-controls"><button class="outline-button" data-action="speak-model">▷ 문장 듣기</button><button class="outline-button" data-action="speak-slow">▷ 천천히 듣기</button><button class="primary-button" id="recordButton" data-action="record">● 내 목소리 녹음</button></div><p class="record-state" id="recordState">녹음 후 내 목소리를 들어 보세요. 자동 발음 채점은 하지 않습니다.</p><div id="recordPlayback"></div><div class="quiz-bottom"><button class="text-button" data-action="speaking-prev">← 이전 문장</button><button class="text-button" data-action="speaking-next">다음 문장 →</button></div></div><p class="private-note">녹음은 이 화면에서만 재생되며 화면을 벗어나면 사라집니다. 서버로 업로드하지 않습니다.</p>`;
 }
-function pendingPanel(){return `<div class="empty"><span class="chip">2022 개정</span><h3>개인 본문으로 먼저 공부하세요.</h3><p>중3 교과서의 단원명과 본문을 아직 검증하지 못했습니다. 구판을 대신 넣지 않았습니다. 내 본문에 자료를 등록하면 문장 듣기·빈칸 연습·말하기가 열립니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button></div>`;}
+function pendingPanel(){return `<div class="empty"><span class="chip">2022 개정</span><h3>개인 본문으로 먼저 공부하세요.</h3><p>${unit().verified?'공식 단원명을 확인했습니다. 교과서 자료에서 원문을 확인하세요.':'중3의 2022 개정 단원명과 본문 링크는 아직 확인하지 못했습니다.'} 내 본문에 자료를 등록하면 문장 듣기·빈칸 연습·말하기가 열립니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button><button class="outline-button" data-tab="resources">교과서 자료 보기 ↗</button></div>`;}
 function textPanel(){
  const t=state.texts[unit().id];return `<div class="import-card"><span class="chip">나만의 본문</span><h3 style="margin-top:10px">교과서 본문을 넣어 공부하세요.</h3><p>영어 본문을 붙여 넣으면 문장을 나눠 듣기와 빈칸 연습을 만듭니다. 해석을 함께 넣으려면 한 줄에 <b>영어 문장 || 한국어 해석</b> 형식으로 입력하세요.</p><label for="textTitle">본문 제목</label><input id="textTitle" value="${h(t?.title||'')}" placeholder="예. 1과 본문"><label for="textContent">영어 본문 · 해석은 선택</label><textarea id="textContent" placeholder="English sentence. || 한국어 해석\n다음 문장은 새 줄에 입력하세요.">${h(t?.raw||'')}</textarea><p class="private-note">해석은 입력한 내용만 표시합니다. 자동 번역은 하지 않습니다.</p><div class="import-actions"><button class="primary-button" data-action="save-text">본문 저장하기</button><button class="outline-button" data-action="export-data">내 자료 백업</button><button class="outline-button" data-action="import-data">백업 불러오기</button>${t?'<button class="danger-button" data-action="delete-text">이 본문 삭제</button>':''}</div><input type="file" id="backupFile" class="backup-file" accept="application/json,.json"><p class="private-note">등록한 본문·오답·학습 기록은 이 브라우저에 저장됩니다. 다른 기기로 옮길 때는 백업 파일을 이용하세요. 브라우저 데이터를 지우면 사라집니다.</p><p id="importStatus" class="import-status" role="status"></p></div>${t?`<section class="import-reader"><div class="section-top"><h3>${h(t.title)} <span class="chip">${t.reading.length}문장</span></h3><button class="outline-button" data-action="text-quiz">본문 빈칸 연습 →</button></div>${readingTools('text')}${readerHTML(t.reading,'text')}</section>`:''}`;
 }
 function renderPanel(){
  const u=unit();
- const unavailable=u.pending&&!['text','review','speaking'].includes(route.tab)&&!(route.tab==='quiz'&&quiz);
- $('#panel').innerHTML=unavailable?pendingPanel():({words:wordPanel,grammar:grammarPanel,reading:readingPanel,quiz:quizPanel,speaking:speakingPanel,review:reviewPanel,text:textPanel}[route.tab])();
+ const unavailable=u.pending&&!['text','review','speaking','resources'].includes(route.tab)&&!(route.tab==='quiz'&&quiz);
+ $('#panel').innerHTML=unavailable?pendingPanel():({words:wordPanel,grammar:grammarPanel,reading:readingPanel,quiz:quizPanel,speaking:speakingPanel,review:reviewPanel,text:textPanel,resources:resourcesPanel}[route.tab])();
 }
 function splitText(raw){
  return raw.split(/\r?\n/).flatMap(line=>{
@@ -212,8 +212,12 @@ async function record(){
  }catch{recordingStream?.getTracks().forEach(t=>t.stop());if(token===recordingToken&&$('#recordState')){$('#recordState').textContent='마이크를 사용할 수 없습니다. 브라우저의 마이크 권한을 확인해 주세요.';btn.disabled=false;}}
  finally{recordingBusy=false;}
 }
+function resourcesPanel(){
+ const u=unit();const resources=B.resources.filter(r=>r.grade===u.grade&&(r.number===null||r.number===u.number));
+ return `<div class="section-top"><h3>중${u.grade} · ${u.number}과 교과서 자료</h3><span class="chip">${resources.length}개 링크</span></div><p class="private-note">확인일 ${h(B.checkedAt)} · 자료는 원본 사이트에서 열립니다. 공식 자료 일부는 로그인·교사 인증이 필요합니다.</p>${u.grade===3?`<p class="pending-banner">${u.verified?'공식 단원명과 자료실 링크를 확인했습니다. 실제 본문은 원본에서 확인하세요.':'동아 중3의 2022 개정 본문 직접 링크는 확인하지 못했습니다.'}</p>`:''}${resources.map(r=>`<article class="source-link"><span class="chip">${r.kind==='official'?'출판사 공식':r.kind==='textbook'?'본문·대화문 모음':'학습 자료'}</span> <a href="${h(r.url)}" target="_blank" rel="noopener noreferrer">${h(r.label)} ↗</a><small>${h(r.note)}</small></article>`).join('')}<p class="private-note">받은 영어 본문은 내 본문에 등록하면 문장 듣기·빈칸 연습·말하기에 사용할 수 있습니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button>`;
+}
 function sourceDialog(){
- $('#sourceBody').innerHTML=`<div class="source-info"><p><b>${h(B.publisher)} ${h(B.author)} · ${h(B.edition)}</b></p><p>중1·중2의 일반 단원 8개씩을 구성했습니다. 중3은 단원 정보 대조 전이며 개인 본문을 등록해 공부할 수 있습니다. 특별 단원은 미수록입니다.</p><p>어휘·독해·설명·퀴즈는 주제에 맞춰 별도로 작성한 연습 자료입니다. 교과서의 원문·삽화·전체 단어장·출판사 음원은 수록하지 않았습니다. 문법은 자체 선정했으며 교과서 단원별 문법과의 일치 여부는 대조 전입니다.</p><p>개인 본문과 학습 기록은 브라우저에만 저장됩니다. 공개 저장소에는 전송하지 않습니다. 이 앱은 출판사 공식 앱이 아닙니다.</p><p>자료 경로 확인일 · ${h(B.checkedAt)}</p></div>${B.sources.map(s=>`<div class="source-link"><a href="${h(s.url)}" target="_blank" rel="noopener noreferrer">${h(s.label)} ↗</a><small>${h(s.note)}</small></div>`).join('')}`;
+ $('#sourceBody').innerHTML=`<div class="source-info"><p><b>${h(B.publisher)} ${h(B.author)} · ${h(B.edition)}</b></p><p>중1·중2의 일반 단원 8개씩을 구성했습니다. ${B.grade3Titles.length?'중3의 공식 단원명 8개와 자료실 링크를 확인했습니다.':'중3의 2022 개정 단원명·본문 링크는 미확인입니다.'} 중3은 개인 본문으로 학습합니다. 특별 단원은 미수록입니다.</p><p>어휘·독해·설명·퀴즈는 주제에 맞춰 별도로 작성한 연습 자료입니다. 교과서의 원문·삽화·전체 단어장·출판사 음원은 수록하지 않았습니다. 문법은 자체 선정했으며 교과서 단원별 문법과의 일치 여부는 대조 전입니다.</p><p>개인 본문과 학습 기록은 브라우저에만 저장됩니다. 공개 저장소에는 전송하지 않습니다. 이 앱은 출판사 공식 앱이 아닙니다.</p><p>자료 경로 확인일 · ${h(B.checkedAt)}</p><p>교과서 자료 탭에서 학년·단원별 공식 자료, 본문 PDF 모음과 공개 학습 자료 ${B.resources.filter(r=>r.kind==='practice').length}개를 확인하세요. 링크 목록이며 파일별 내용 검수는 하지 않았습니다.</p></div>${B.sources.map(s=>`<div class="source-link"><a href="${h(s.url)}" target="_blank" rel="noopener noreferrer">${h(s.label)} ↗</a><small>${h(s.note)}</small></div>`).join('')}`;
  $('#sourceDialog').showModal();
 }
 document.addEventListener('click',e=>{

@@ -56,3 +56,24 @@ test('중3은 구판 없이 개인 본문으로 문제를 만든다',()=>{
 test('잘못된 주소는 유효한 학년·단원·메뉴로 돌아간다',()=>{
  const {run}=context();run('location.hash="#9/99/unknown"');assert.equal(run('JSON.stringify(parseRoute())'),JSON.stringify({grade:1,number:1,tab:'words'}));
 });
+
+test('자료 탭은 출판사·학년·단원에 맞는 링크만 표시한다',()=>{
+ const {run,nodes}=context();
+ assert.equal(run('B.resources.filter(r=>r.kind==="practice").length'),67);
+ assert.equal(run('B.resources.every(r=>new URL(r.url).protocol==="https:")'),true);
+ run('route={grade:1,number:1,tab:"resources"}; renderPanel()');
+ const html=nodes.get('#panel').innerHTML;
+ assert.ok(html.includes('전 단원 본문·대화문 PDF 모음'));
+ assert.ok(!html.includes('2과 본문 빈칸'));
+ assert.ok(run('B.resources.filter(r=>r.kind==="practice"&&r.grade===1&&r.number===1).every(r=>resourcesPanel().includes(h(r.url)))'));
+ run('route={grade:3,number:1,tab:"resources"}; renderPanel()');
+ assert.ok(nodes.get('#panel').innerHTML.includes('출판사 공식'));
+ assert.equal(run('parseRoute.call(null,location.hash="#1/1/resources").tab'),'resources');
+});
+test('중3 공식 단원명 확인 상태를 반영하고 개인 본문 키를 유지한다',()=>{
+ const {run}=context();run('route={grade:3,number:1,tab:"text"}');
+ assert.equal(run('unit().id'),"y3-1");
+ assert.equal(run('unit().title'),"Be Yourself!");
+ assert.equal(run('unit().verified'),true);
+ assert.ok(run('pendingPanel().includes("교과서 자료 보기")'));
+});

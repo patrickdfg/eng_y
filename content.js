@@ -1355,3 +1355,656 @@ window.BOOK = {
     }
   ]
 };
+
+// 2026-11-01 확인한 공식 자료 및 공개 학습 자료의 접근 경로입니다.
+window.BOOK.grade3Titles = ["Be Yourself!", "Technologies Around Me", "Exploring World Cities", "The Arts We Enjoy", "Feel the Wonders", "Words Mean More than Words", "Plan, Save, and Spend!", "Let Our Voice Speak"];
+window.BOOK.resources = [
+  {
+    "grade": 1,
+    "number": null,
+    "label": "공식 교과서 자료실",
+    "url": "https://www.ybmcloud.com/textbook/T07171106112024M5FWt.html?siteType=M",
+    "note": "수업 자료·음원·평가 자료. 일부 자료는 로그인·교사 인증 필요.",
+    "kind": "official"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C202408161010272yHaR",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "교사용 교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20240826070808fmicf",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "지도서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20240816101051miKCs",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "공식 교과서 자료실",
+    "url": "https://www.ybmcloud.com/textbook/T07230543122025MnPVA.html?siteType=M",
+    "note": "수업 자료·음원·평가 자료. 일부 자료는 로그인·교사 인증 필요.",
+    "kind": "official"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C2025080703290339hbA",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "교사용 교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20250807032903MpoRx",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "지도서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20250807032903DQFpq",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 3,
+    "number": null,
+    "label": "공식 교과서 자료실",
+    "url": "https://www.ybmcloud.com/textbook/T07300307152026sJsh7.html?siteType=M",
+    "note": "수업 자료·음원·평가 자료. 일부 자료는 로그인·교사 인증 필요.",
+    "kind": "official"
+  },
+  {
+    "grade": 3,
+    "number": null,
+    "label": "교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113004UOT6H",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 3,
+    "number": null,
+    "label": "교사용 교과서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113009htGnU",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 3,
+    "number": null,
+    "label": "지도서 보기",
+    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113008cBYfZ",
+    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
+    "kind": "official"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "전 단원 본문·대화문 PDF 모음",
+    "url": "https://englishtutortv.com/22개정-중1-ybm-박준언-전단원-대화문-본문-pdf/",
+    "note": "2022 개정 1~8과 다운로드 링크 확인. 각 PDF 내용과 완전성은 별도 검수 전입니다.",
+    "kind": "textbook"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "전 단원 본문·대화문 PDF 모음",
+    "url": "https://englishtutortv.com/중2-ybm-박준언-전단원-대화문-본문-pdf/",
+    "note": "2022 개정 1~8과 다운로드 링크 확인. 페이지 내부 소제목에 중1 오기가 있어 공식 중2 교과서와 대조하세요.",
+    "kind": "textbook"
+  },
+  {
+    "grade": 1,
+    "number": 8,
+    "label": "중1 YBM 박준언 8과 본문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-8%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 8,
+    "label": "중1 YBM 박준언 8과 대화문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-8%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 8,
+    "label": "중1 YBM 박준언 8과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-8%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 7,
+    "label": "중1 YBM 박준언 7과 본문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-7%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 7,
+    "label": "중1 YBM 박준언 7과 대화문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-7%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 7,
+    "label": "중1 YBM 박준언 7과 단어 암기 퀴즈",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-7%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%95%94%ea%b8%b0-%ed%80%b4%ec%a6%88/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 6,
+    "label": "중1 YBM 박준언 6과 본문 빈칸 [22개정]",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-22%ea%b0%9c%ec%a0%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 6,
+    "label": "중1 YBM 박준언 6과 대화문 빈칸 [22개정]",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-22%ea%b0%9c%ec%a0%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 6,
+    "label": "중1 YBM 박준언 6과 단어 시험",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%8b%9c%ed%97%98/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 5,
+    "label": "중1 YBM 박준언 5과 본문 빈칸 [22개정]",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-22%ea%b0%9c%ec%a0%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 5,
+    "label": "중1 YBM 박준언 5과 대화문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 5,
+    "label": "중1 YBM 박준언 5과 단어 시험",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%8b%9c%ed%97%98/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 4,
+    "label": "중1 영어 YBM 박준언 4과 본문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%911-%ec%98%81%ec%96%b4-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 4,
+    "label": "중1 영어 교과서 YBM 박준언 4과 대화문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%911-%ec%98%81%ec%96%b4-%ea%b5%90%ea%b3%bc%ec%84%9c-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 4,
+    "label": "22개정 중1 YBM 박준언 4과 단어 테스트",
+    "url": "https://englishtutortv.com/22%ea%b0%9c%ec%a0%95-%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 3,
+    "label": "중1 YBM 박준언 3과 본문 빈칸 [22개정]",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-22%ea%b0%9c%ec%a0%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 3,
+    "label": "중1 YBM 박준언 3과 대화문 변형 [22개정]",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95-22%ea%b0%9c%ec%a0%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 3,
+    "label": "22개정 중1 YBM 박준언 3과 단어 테스트",
+    "url": "https://englishtutortv.com/22%ea%b0%9c%ec%a0%95-%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 2,
+    "label": "중1 YBM 박준언 2과 본문 빈칸 넣기",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%84%a3%ea%b8%b0/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 2,
+    "label": "중1 YBM 박준언 2과 대화문 빈칸 채우기",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-%ec%b1%84%ec%9a%b0%ea%b8%b0/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 2,
+    "label": "중1 YBM 박준언 2과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 1,
+    "label": "중1 YBM 박준언 1과 본문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 1,
+    "label": "중1 YBM 박준언 1과 대화문 빈칸 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": 1,
+    "label": "중1 YBM 박준언 1과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "중1 YBM 박준언 1과 2과 3과 4과 5과 6과 7과 8과 전단원 단어 및 학습지",
+    "url": "https://englishtutortv.com/%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-2%ea%b3%bc-3%ea%b3%bc-4%ea%b3%bc-5%ea%b3%bc-6%ea%b3%bc-7%ea%b3%bc-8%ea%b3%bc-%ec%a0%84%eb%8b%a8%ec%9b%90-%eb%8b%a8%ec%96%b4-%eb%b0%8f-%ed%95%99/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 1,
+    "number": null,
+    "label": "22개정 중1 YBM 박준언 전단원 대화문 본문 pdf",
+    "url": "https://englishtutortv.com/22%ea%b0%9c%ec%a0%95-%ec%a4%911-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-%ec%a0%84%eb%8b%a8%ec%9b%90-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%b8%eb%ac%b8-pdf/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 6,
+    "label": "중2 YBM 박준언 6과 본문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 6,
+    "label": "중2 YBM 박준언 6과 대화문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 6,
+    "label": "중2 YBM 박준언 6과 단어",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8b%a8%ec%96%b4/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 5,
+    "label": "중2 YBM 박준언 5과 본문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 5,
+    "label": "중2 YBM 박준언 5과 대화문 빈칸",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 5,
+    "label": "중2 YBM 박준언 5과 단어 자료",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%9e%90%eb%a3%8c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 YBM 박준언 4과 본문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 영어 YBM 박준언 4과 대화문 빈칸 변형",
+    "url": "https://englishtutortv.com/%ec%a4%912-%ec%98%81%ec%96%b4-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 본문 빈칸 퀴즈",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b9%88%ec%b9%b8-%ed%80%b4%ec%a6%88/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 대화문 빈칸 채우기",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b9%88%ec%b9%b8-%ec%b1%84%ec%9a%b0%ea%b8%b0/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 YBM 박준언 4과 어휘 자료",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%ec%96%b4%ed%9c%98-%ec%9e%90%eb%a3%8c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 단어 자료",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%9e%90%eb%a3%8c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 본문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-2/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 대화문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 본문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-2/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 대화문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 단어 (목록 및 테스트)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%8b%a8%ec%96%b4-%eb%aa%a9%eb%a1%9d-%eb%b0%8f-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 단어 (목록 & 테스트)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%8b%a8%ec%96%b4-%eb%aa%a9%eb%a1%9d-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": null,
+    "label": "중2 YBM 박준언 전단원 대화문 본문 pdf",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-%ec%a0%84%eb%8b%a8%ec%9b%90-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%b8%eb%ac%b8-pdf/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 8,
+    "label": "중2 YBM 박준언 8과 단어 퀴즈",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-8%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%80%b4%ec%a6%88/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 본문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 7,
+    "label": "중2 YBM 박준언 7과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-7%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 6,
+    "label": "중2 YBM 박준언 6과 단어 시험",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%8b%9c%ed%97%98/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 5,
+    "label": "중2 YBM 박준언 5과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 YBM 박준언 4과 본문 변형",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 YBM 박준언 4과 대화문 변형",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 본문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 대화문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 4,
+    "label": "중2 와이비엠 박준언 4과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-%ec%99%80%ec%9d%b4%eb%b9%84%ec%97%a0-%eb%b0%95%ec%a4%80%ec%96%b8-4%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 3,
+    "label": "중2 YBM 박준언 3과 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-3%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 본문 변형문제 (빈칸)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 대화문 변형문제 (빈칸)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 본문 변형문제 (빈칸)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 대화문 변형문제 (빈칸)",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%eb%8c%80%ed%99%94%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c-%eb%b9%88%ec%b9%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 영어 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%ec%98%81%ec%96%b4-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 1,
+    "label": "중2 YBM 박준언 1과 영어 단어 테스트",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-1%ea%b3%bc-%ec%98%81%ec%96%b4-%eb%8b%a8%ec%96%b4-%ed%85%8c%ec%8a%a4%ed%8a%b8/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 8,
+    "label": "중2 영어 YBM 시사 박준언 8과 단어/숙어 84개 정리",
+    "url": "https://englishtutortv.com/%ec%a4%912-%ec%98%81%ec%96%b4-ybm-%ec%8b%9c%ec%82%ac-%eb%b0%95%ec%a4%80%ec%96%b8-8%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%88%99%ec%96%b4-84%ea%b0%9c-%ec%a0%95%eb%a6%ac/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 7,
+    "label": "중2 영어 교과서 YBM 시사 박준언 7과 단어/숙어 정리",
+    "url": "https://englishtutortv.com/%ec%a4%912-%ec%98%81%ec%96%b4-%ea%b5%90%ea%b3%bc%ec%84%9c-ybm-%ec%8b%9c%ec%82%ac-%eb%b0%95%ec%a4%80%ec%96%b8-7%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%88%99%ec%96%b4-%ec%a0%95%eb%a6%ac/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 6,
+    "label": "중2 영어 교과서 YBM 시사 박준언 6과 단어/숙어 모음",
+    "url": "https://englishtutortv.com/%ec%a4%912-%ec%98%81%ec%96%b4-%ea%b5%90%ea%b3%bc%ec%84%9c-ybm-%ec%8b%9c%ec%82%ac-%eb%b0%95%ec%a4%80%ec%96%b8-6%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%88%99%ec%96%b4-%eb%aa%a8%ec%9d%8c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 5,
+    "label": "중2 YBM 시사 박준언 5과 단어 암기장",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%ec%8b%9c%ec%82%ac-%eb%b0%95%ec%a4%80%ec%96%b8-5%ea%b3%bc-%eb%8b%a8%ec%96%b4-%ec%95%94%ea%b8%b0%ec%9e%a5/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  },
+  {
+    "grade": 2,
+    "number": 2,
+    "label": "중2 YBM 박준언 2과 본문 변형문제",
+    "url": "https://englishtutortv.com/%ec%a4%912-ybm-%eb%b0%95%ec%a4%80%ec%96%b8-2%ea%b3%bc-%eb%b3%b8%eb%ac%b8-%eb%b3%80%ed%98%95%eb%ac%b8%ec%a0%9c/",
+    "note": "공개 학습 자료. 게시물의 개정 표시·단원명을 확인하세요. 첨부파일별 검수 전입니다.",
+    "kind": "practice"
+  }
+];
