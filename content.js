@@ -1357,7 +1357,7 @@ window.BOOK = {
 };
 
 // 2026-11-01 확인한 공식 자료 및 공개 학습 자료의 접근 경로입니다.
-window.BOOK.grade3Titles = ["Be Yourself!", "Technologies Around Me", "Exploring World Cities", "The Arts We Enjoy", "Feel the Wonders", "Words Mean More than Words", "Plan, Save, and Spend!", "Let Our Voice Speak"];
+window.BOOK.grade3Titles = [];
 window.BOOK.resources = [
   {
     "grade": 1,
@@ -1420,38 +1420,6 @@ window.BOOK.resources = [
     "number": null,
     "label": "지도서 보기",
     "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20250807032903DQFpq",
-    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
-    "kind": "official"
-  },
-  {
-    "grade": 3,
-    "number": null,
-    "label": "공식 교과서 자료실",
-    "url": "https://www.ybmcloud.com/textbook/T07300307152026sJsh7.html?siteType=M",
-    "note": "수업 자료·음원·평가 자료. 일부 자료는 로그인·교사 인증 필요.",
-    "kind": "official"
-  },
-  {
-    "grade": 3,
-    "number": null,
-    "label": "교과서 보기",
-    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113004UOT6H",
-    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
-    "kind": "official"
-  },
-  {
-    "grade": 3,
-    "number": null,
-    "label": "교사용 교과서 보기",
-    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113009htGnU",
-    "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
-    "kind": "official"
-  },
-  {
-    "grade": 3,
-    "number": null,
-    "label": "지도서 보기",
-    "url": "https://www.ybmcloud.com/prcenter_viewer?contentId=C20260814113008cBYfZ",
     "note": "출판사 공식 뷰어 링크. 뷰어 표시와 이용 가능 범위는 사이트에서 확인하세요.",
     "kind": "official"
   },

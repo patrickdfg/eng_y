@@ -15,7 +15,7 @@ let quiz = null;
 let speechIndex = 0;
 let speechToken = 0;
 let translations = true;
-let readingSpeed = 0.85;
+let readingSpeed = 1;
 let recorder = null;
 let recordingStream = null;
 let recordingUrl = null;
@@ -24,8 +24,7 @@ let recordingBusy = false;
 let toastTimer;
 let pendingFlashIndex=null;
 const tabs = [['home','⌂','학습 홈'],['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문'],['resources','↗','교과서 자료']];
-const pending = Array.from({length:8},(_,i)=>({id:`${B.code}3-${i+1}`,grade:3,number:i+1,title:B.grade3Titles[i]||`${i+1}과 · 내 본문`,verified:!!B.grade3Titles[i],topic:B.grade3Titles[i]?'공식 단원명 확인 · 개인 본문으로 학습':'2022 개정 단원 정보 확인 전',words:[],grammar:[],reading:[],pending:true}));
-const units = [...B.units,...pending];
+const units = B.units;
 function unit(){return units.find(u=>u.grade===route.grade&&u.number===route.number);}
 function save(){
   try { localStorage.setItem(storageKey,JSON.stringify(state)); return true; }
@@ -35,12 +34,12 @@ function toast(message){clearTimeout(toastTimer);$('#toast').textContent=message
 function setRoute(grade,number,tab){location.hash=`${grade}/${number}/${tab}`;}
 function parseRoute(){
   const raw=(location.hash.slice(1)||state.last||'1/1/words').split('/');
-  const grade=[1,2,3].includes(Number(raw[0]))?Number(raw[0]):1;
+  const grade=[1,2].includes(Number(raw[0]))?Number(raw[0]):1;
   const number=Number(raw[1])>=1&&Number(raw[1])<=8?Number(raw[1]):1;
   const tab=tabs.some(t=>t[0]===raw[2])?raw[2]:'words';
   return {grade,number,tab};
 }
-function stopAudio(){speechToken++;if('speechSynthesis'in window) speechSynthesis.cancel();}
+function stopAudio(){speechToken++;stopNativeAudio();}
 function stopRecording(){
   recordingToken++;
   if(recorder?.state==='recording')recorder.stop();
@@ -48,17 +47,7 @@ function stopRecording(){
   recordingStream=null;recorder=null;recordingBusy=false;
   if(recordingUrl){URL.revokeObjectURL(recordingUrl);recordingUrl=null;}
 }
-function speak(text,rate=readingSpeed,onEnd=null){
-  if(!('speechSynthesis'in window)){toast('이 브라우저는 문장 듣기를 지원하지 않습니다.');return;}
-  stopAudio();
-  const utterance=new SpeechSynthesisUtterance(text);
-  utterance.lang='en-US';utterance.rate=rate;
-  const english=speechSynthesis.getVoices().find(v=>v.lang==='en-US')||speechSynthesis.getVoices().find(v=>v.lang.startsWith('en'));
-  if(english)utterance.voice=english;
-  utterance.onerror=e=>{if(!['interrupted','canceled'].includes(e.error))toast('영어 음성을 재생하지 못했습니다. 기기의 영어 음성 설정을 확인해 주세요.');};
-  if(onEnd)utterance.onend=onEnd;
-  speechSynthesis.speak(utterance);
-}
+function speak(text,rate=readingSpeed,onEnd=null){stopAudio();speakNative(text,rate,onEnd);}
 function speakAll(reading){
   stopAudio();let index=0;
   function next(){
@@ -78,9 +67,9 @@ function stats(){
 function render(){
  const u=unit();document.body.classList.toggle('ybm',B.code==='y');
  document.title=`영어하루 · ${B.publisher} ${B.author}`;
- $('#bookLabel').innerHTML=`${h(B.publisher)} · ${h(B.author)}<strong>중학 영어 1·2·3</strong>`;
+ $('#bookLabel').innerHTML=`${h(B.publisher)} · ${h(B.author)}<strong>중학 영어 1·2</strong>`;
  $('#footerBook').textContent=`${B.publisher} ${B.author} · 2022 개정`;
- $('#grades').innerHTML=[1,2,3].map(g=>`<button class="grade ${g===route.grade?'active':''}" data-grade="${g}" aria-pressed="${g===route.grade}">중${g}</button>`).join('');
+ $('#grades').innerHTML=[1,2].map(g=>`<button class="grade ${g===route.grade?'active':''}" data-grade="${g}" aria-pressed="${g===route.grade}">중${g}</button>`).join('');
  $('#lessons').innerHTML=units.filter(v=>v.grade===route.grade).map(v=>`<button class="lesson-button ${v.number===u.number?'active':''}" data-unit="${v.number}" ${v.number===u.number?'aria-current="true"':''}><span class="num">${String(v.number).padStart(2,'0')}</span><span>${h(v.pending?(state.texts[v.id]?.title||v.title):v.title)}<small>${h(v.topic)}</small></span></button>`).join('');
  $('#eyebrow').textContent=`${B.publisher.toUpperCase()} · GRADE ${route.grade}`;
  $('#unitNumber').textContent=`중${u.grade} · LESSON ${String(u.number).padStart(2,'0')}`;
@@ -91,11 +80,11 @@ function render(){
  stats();renderPanel();renderDashboard();
 }
 function wordPanel(){return wordMode==='cards'?flashcardPanel():`<div class="section-top"><h3>한눈에 보는 단어</h3><div class="segmented"><button data-action="word-cards" aria-pressed="false">카드</button><button class="selected" data-action="word-list" aria-pressed="true">목록</button></div></div>`+wordListPanel();}
-function wordListPanel(){const u=unit();return `<div class="section-top"><h3>오늘의 주제 어휘 <span class="chip">${u.words.length} WORDS</span></h3><span class="subtle">들어 보고, 아는 단어를 표시해요.</span></div><div class="word-grid">${u.words.map((w,i)=>`<article class="word-card ${state.known[`${u.id}:${i}`]?'known':''}"><span class="word-index">WORD ${String(i+1).padStart(2,'0')}</span><h4 lang="en">${h(w.en)}</h4><p>${h(w.ko)}</p><div class="word-controls"><button class="icon-button" data-word-speak="${i}" aria-label="${h(w.en)} 듣기">▷</button><button class="know-button" data-known="${i}" aria-pressed="${!!state.known[`${u.id}:${i}`]}">${state.known[`${u.id}:${i}`]?'✓ 외웠어요':'○ 외웠어요'}</button></div></article>`).join('')}</div><p class="private-note">교과서 전체 단어장이 아닌 주제별 자체 선정 어휘입니다.</p>`;}
-function grammarPanel(){return `<div class="section-top"><h3>문장 구조를 차근차근</h3><span class="subtle">자체 선정 연습 문법</span></div>${unit().grammar.map((g,i)=>`<article class="grammar-card"><span class="chip">POINT ${i+1}</span><h3>${h(g.title)}</h3><p>${h(g.rule)}</p><div class="example"><div><strong lang="en">${h(g.en)}</strong><small>${h(g.ko)}</small></div><button class="icon-button" data-grammar-speak="${i}" aria-label="예문 듣기">▷</button></div></article>`).join('')}<p class="private-note">교과서 단원별 문법 목록과의 일치 여부는 대조 전입니다.</p>`;}
+function wordListPanel(){const u=unit();return `<div class="section-top"><h3>오늘의 주제 어휘 <span class="chip">${u.words.length} WORDS</span></h3><span class="subtle">들어 보고, 아는 단어를 표시해요.</span></div><div class="word-grid">${u.words.map((w,i)=>`<article class="word-card ${state.known[`${u.id}:${i}`]?'known':''}"><span class="word-index">WORD ${String(i+1).padStart(2,'0')}</span><span class="mini-picture" role="img" aria-label="${h(w.ko)} 그림 힌트">${window.WORD_DETAILS[w.en].picture}</span><h4 lang="en">${h(w.en)}</h4><p>${h(w.ko)}</p><div class="word-controls"><button class="icon-button" data-word-speak="${i}" aria-label="${h(w.en)} 듣기">▷</button><button class="know-button" data-known="${i}" aria-pressed="${!!state.known[`${u.id}:${i}`]}">${state.known[`${u.id}:${i}`]?'✓ 외웠어요':'○ 외웠어요'}</button></div><details><summary>예문 3개 보기</summary>${wordExampleHTML(w)}</details></article>`).join('')}</div><p class="private-note">교과서 전체 단어장이 아닌 주제별 자체 선정 어휘입니다.</p>`;}
+function grammarPanel(){return expandedGrammarPanel();}
 function readerHTML(reading,prefix='reading'){return reading.map((r,i)=>`<article class="sentence"><span class="sentence-number">${String(i+1).padStart(2,'0')}</span><div class="sentence-text"><p class="en" lang="en">${h(r.en)}</p>${translations&&r.ko?`<p class="ko">${h(r.ko)}</p>`:''}</div><button class="icon-button" data-${prefix}-speak="${i}" aria-label="${i+1}번 문장 듣기">▷</button></article>`).join('');}
 function readingTools(kind){return `<div class="reading-tools"><button class="outline-button" data-action="${kind==='text'?'text-all':'reading-all'}">▷ 전체 듣기</button><button class="outline-button" data-action="stop-audio">정지</button><button class="outline-button" data-action="toggle-translations" aria-pressed="${translations}">${translations?'해석 숨기기':'해석 보기'}</button><label><span class="screen-reader">듣기 속도</span><select id="speedSelect">${[.65,.85,1].map(s=>`<option value="${s}" ${s===readingSpeed?'selected':''}>${s}배속</option>`).join('')}</select></label></div>`;}
-function readingPanel(){return `<div class="section-top"><h3>한 문장씩 읽고 듣기</h3><span class="chip">자체 독해</span></div>${readingTools('reading')}${readerHTML(unit().reading)}<div class="reading-next"><button class="outline-button" data-tab="speaking">이 문장으로 말하기 →</button><button class="primary-button" data-action="quiz-start">문제로 확인하기 →</button></div><p class="private-note">교과서 본문이 아닌 단원 주제에 맞춰 직접 쓴 짧은 글입니다. 듣기는 기기의 영어 음성으로 재생됩니다.</p>`;}
+function readingPanel(){return expandedReadingPanel();}
 function normalize(v){return String(v).normalize('NFKC').toLowerCase().replace(/[^a-z0-9]/g,'');}
 function cloze(r,id,label){
  const words=r.en.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g)||[];
@@ -112,17 +101,18 @@ function questions(u){
  return {id:`${u.id}:w${i}`,type:'choice',label:'어휘',prompt:`${w.en}의 뜻은 무엇인가요?`,options:rotated,answer:rotated.indexOf(w.ko),why:`${w.en} = ${w.ko}`};
  });
  u.grammar.forEach((g,i)=>out.push({id:`${u.id}:g${i}`,type:'choice',label:'문법',prompt:g.question,options:g.options,answer:g.answer,why:g.why}));
+ u.grammar.forEach((g,i)=>{const topic=window.GRAMMAR_LIBRARY.find(t=>t.title===g.title);out.push(...grammarQuestions([topic],`${u.id}:gx${i}`).slice(1));});
  u.reading.forEach((r,i)=>{const q=cloze(r,`${u.id}:r${i}`,'문장 빈칸');if(q)out.push(q);});return out;
 }
 function startQuiz(mode='unit'){
- let qs=mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(state.texts[unit().id]?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${state.texts[unit().id].updated}:${i}`,'내 본문 빈칸')).filter(Boolean):questions(unit());
+ let qs=mode==='grammar'?grammarQuestions(grammarTopics(),'grammar'):mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(state.texts[unit().id]?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${state.texts[unit().id].updated}:${i}`,'내 본문 빈칸')).filter(Boolean):questions(unit());
  if(!qs.length){toast(mode==='review'?'복습할 오답이 아직 없습니다.':'학습할 문장이 아직 없습니다.');return;}
  quiz={items:qs,index:0,right:0,answered:false,feedback:null,mode,complete:false};
  if(route.tab!=='quiz'){route.tab='quiz';history.pushState(null,'',`#${route.grade}/${route.number}/quiz`);state.last=`${route.grade}/${route.number}/quiz`;save();}
  render();
 }
 function quizPanel(){
- if(!quiz)return `<div class="quiz-intro"><span class="chip">SMALL STEPS, REAL PROGRESS</span><h3 style="margin-top:15px">배운 내용을 확인해 볼까요?</h3><p class="subtle">바로 채점하고 틀린 문제는 오답노트에 모아 드려요.</p><div class="quiz-types"><span>어휘 ${unit().words.length}문제</span><span>문법 ${unit().grammar.length}문제</span><span>문장 빈칸 ${unit().reading.length}문제</span></div><button class="primary-button" data-action="begin-quiz">${questions(unit()).length}문제 시작하기 →</button></div>`;
+ if(!quiz)return `<div class="quiz-intro"><span class="chip">SMALL STEPS, REAL PROGRESS</span><h3 style="margin-top:15px">배운 내용을 확인해 볼까요?</h3><p class="subtle">바로 채점하고 틀린 문제는 오답노트에 모아 드려요.</p><div class="quiz-types"><span>어휘 ${unit().words.length}문제</span><span>문법 ${unit().grammar.length*3}문제</span><span>문장 빈칸 ${unit().reading.length}문제</span></div><button class="primary-button" data-action="begin-quiz">${questions(unit()).length}문제 시작하기 →</button></div>`;
  if(quiz.complete)return `<div class="result"><span class="chip">오늘의 연습 완료</span><h3>${quiz.mode==='review'?'오답을 다시 살펴봤어요.':'한 걸음 더 가까워졌어요.'}</h3><strong>${Math.round(quiz.right/quiz.items.length*100)}<span style="font-size:22px">점</span></strong><p>${quiz.items.length}문제 중 ${quiz.right}문제 정답 · 틀린 문제는 오답노트에서 복습하세요.</p><div class="actions"><button class="primary-button" data-action="review-start">오답 다시 풀기</button><button class="outline-button" data-action="quiz-retry">한 번 더 연습</button><button class="outline-button" data-tab="words">단어로 돌아가기</button></div></div>`;
  const q=quiz.items[quiz.index];
  return `<div class="quiz-card"><div class="quiz-meta"><span>${h(q.label)} · ${quiz.mode==='review'?'전체 학년 오답 복습':quiz.mode==='text'?'개인 본문 연습':'단원 연습'}</span><span>${quiz.index+1} / ${quiz.items.length}</span></div><progress value="${quiz.index}" max="${quiz.items.length}" aria-label="문제 진행률"></progress><h3>${h(q.prompt)}</h3>${q.type==='blank'&&q.ko?`<p class="prompt-ko">${h(q.ko)}</p>`:''}${q.type==='choice'?`<div class="options">${q.options.map((option,i)=>`<button class="option ${quiz.answered&&i===q.answer?'correct':''} ${quiz.answered&&quiz.selected===i&&i!==q.answer?'incorrect':''}" data-answer="${i}" ${quiz.answered?'disabled':''}><span>${i+1}</span>${h(option)}</button>`).join('')}</div>`:`<form id="blankForm" class="blank-form"><label class="screen-reader" for="blankAnswer">빈칸에 들어갈 영어 단어</label><input id="blankAnswer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="빈칸에 들어갈 단어" ${quiz.answered?'disabled':''} required><button class="primary-button" ${quiz.answered?'disabled':''}>정답 확인</button></form>`}${quiz.answered?`<div class="feedback ${quiz.feedback.correct?'':'bad'}" role="status"><strong>${quiz.feedback.correct?'✓ 정답이에요!':'다시 기억해 두세요.'}</strong><p>${q.type==='blank'?`정답 · ${h(q.answer)}<br>`:''}${h(q.why)}</p></div>`:''}<div class="quiz-bottom"><button class="text-button" data-action="quiz-exit">연습 종료</button>${quiz.answered?`<button class="primary-button" data-action="quiz-next">${quiz.index===quiz.items.length-1?'결과 보기':'다음 문제 →'}</button>`:'<span class="subtle">차근차근 풀어 보세요.</span>'}</div></div>`;
@@ -141,7 +131,7 @@ function speakingPanel(){
  speechIndex%=source.length;const r=source[speechIndex];
  return `<div class="section-top"><h3>듣고, 따라 말하고, 비교해요.</h3><span class="chip">${textReading?.length?'내 본문':'자체 예문'} ${speechIndex+1} / ${source.length}</span></div><div class="speaking-card"><p class="en" lang="en">${h(r.en)}</p>${r.ko?`<p class="ko">${h(r.ko)}</p>`:''}<div class="speaking-controls"><button class="outline-button" data-action="speak-model">▷ 문장 듣기</button><button class="outline-button" data-action="speak-slow">▷ 천천히 듣기</button><button class="primary-button" id="recordButton" data-action="record">● 내 목소리 녹음</button></div><p class="record-state" id="recordState">녹음 후 내 목소리를 들어 보세요. 자동 발음 채점은 하지 않습니다.</p><div id="recordPlayback"></div><div class="quiz-bottom"><button class="text-button" data-action="speaking-prev">← 이전 문장</button><button class="text-button" data-action="speaking-next">다음 문장 →</button></div></div><p class="private-note">녹음은 이 화면에서만 재생되며 화면을 벗어나면 사라집니다. 서버로 업로드하지 않습니다.</p>`;
 }
-function pendingPanel(){return `<div class="empty"><span class="chip">2022 개정</span><h3>개인 본문으로 먼저 공부하세요.</h3><p>${unit().verified?'공식 단원명을 확인했습니다. 교과서 자료에서 원문을 확인하세요.':'중3의 2022 개정 단원명과 본문 링크는 아직 확인하지 못했습니다.'} 내 본문에 자료를 등록하면 문장 듣기·빈칸 연습·말하기가 열립니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button><button class="outline-button" data-tab="resources">교과서 자료 보기 ↗</button></div>`;}
+function pendingPanel(){return `<div class="empty"><h3>학습할 본문을 등록해 주세요.</h3><button class="primary-button" data-tab="text">내 본문 등록하기 →</button></div>`;}
 function textPanel(){
  const t=state.texts[unit().id];return `<div class="import-card"><span class="chip">나만의 본문</span><h3 style="margin-top:10px">교과서 본문을 넣어 공부하세요.</h3><p>영어 본문을 붙여 넣으면 문장을 나눠 듣기와 빈칸 연습을 만듭니다. 해석을 함께 넣으려면 한 줄에 <b>영어 문장 || 한국어 해석</b> 형식으로 입력하세요.</p><label for="textTitle">본문 제목</label><input id="textTitle" value="${h(t?.title||'')}" placeholder="예. 1과 본문"><label for="textContent">영어 본문 · 해석은 선택</label><textarea id="textContent" placeholder="English sentence. || 한국어 해석\n다음 문장은 새 줄에 입력하세요.">${h(t?.raw||'')}</textarea><p class="private-note">해석은 입력한 내용만 표시합니다. 자동 번역은 하지 않습니다.</p><div class="import-actions"><button class="primary-button" data-action="save-text">본문 저장하기</button><button class="outline-button" data-action="export-data">내 자료 백업</button><button class="outline-button" data-action="import-data">백업 불러오기</button>${t?'<button class="danger-button" data-action="delete-text">이 본문 삭제</button>':''}</div><input type="file" id="backupFile" class="backup-file" accept="application/json,.json"><p class="private-note">등록한 본문·오답·학습 기록은 이 브라우저에 저장됩니다. 다른 기기로 옮길 때는 백업 파일을 이용하세요. 브라우저 데이터를 지우면 사라집니다.</p><p id="importStatus" class="import-status" role="status"></p></div>${t?`<section class="import-reader"><div class="section-top"><h3>${h(t.title)} <span class="chip">${t.reading.length}문장</span></h3><button class="outline-button" data-action="text-quiz">본문 빈칸 연습 →</button></div>${readingTools('text')}${readerHTML(t.reading,'text')}</section>`:''}`;
 }
@@ -216,26 +206,30 @@ async function record(){
 }
 function resourcesPanel(){
  const u=unit();const resources=B.resources.filter(r=>r.grade===u.grade&&(r.number===null||r.number===u.number));
- return `<div class="section-top"><h3>중${u.grade} · ${u.number}과 교과서 자료</h3><span class="chip">${resources.length}개 링크</span></div><p class="private-note">확인일 ${h(B.checkedAt)} · 자료는 원본 사이트에서 열립니다. 공식 자료 일부는 로그인·교사 인증이 필요합니다.</p>${u.grade===3?`<p class="pending-banner">${u.verified?'공식 단원명과 자료실 링크를 확인했습니다. 실제 본문은 원본에서 확인하세요.':'동아 중3의 2022 개정 본문 직접 링크는 확인하지 못했습니다.'}</p>`:''}${resources.map(r=>`<article class="source-link"><span class="chip">${r.kind==='official'?'출판사 공식':r.kind==='textbook'?'본문·대화문 모음':'학습 자료'}</span> <a href="${h(r.url)}" target="_blank" rel="noopener noreferrer">${h(r.label)} ↗</a><small>${h(r.note)}</small></article>`).join('')}<p class="private-note">받은 영어 본문은 내 본문에 등록하면 문장 듣기·빈칸 연습·말하기에 사용할 수 있습니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button>`;
+ return `<div class="section-top"><h3>중${u.grade} · ${u.number}과 교과서 자료</h3><span class="chip">${resources.length}개 링크</span></div><p class="private-note">확인일 ${h(B.checkedAt)} · 자료는 원본 사이트에서 열립니다. 공식 자료 일부는 로그인·교사 인증이 필요합니다.</p>${resources.map(r=>`<article class="source-link"><span class="chip">${r.kind==='official'?'출판사 공식':r.kind==='textbook'?'본문·대화문 모음':'학습 자료'}</span> <a href="${h(r.url)}" target="_blank" rel="noopener noreferrer">${h(r.label)} ↗</a><small>${h(r.note)}</small></article>`).join('')}<p class="private-note">받은 영어 본문은 내 본문에 등록하면 문장 듣기·빈칸 연습·말하기에 사용할 수 있습니다.</p><button class="primary-button" data-tab="text">내 본문 등록하기 →</button>`;
 }
 function sourceDialog(){
- $('#sourceBody').innerHTML=`<div class="source-info"><p><b>${h(B.publisher)} ${h(B.author)} · ${h(B.edition)}</b></p><p>중1·중2의 일반 단원 8개씩을 구성했습니다. ${B.grade3Titles.length?'중3의 공식 단원명 8개와 자료실 링크를 확인했습니다.':'중3의 2022 개정 단원명·본문 링크는 미확인입니다.'} 중3은 개인 본문으로 학습합니다. 특별 단원은 미수록입니다.</p><p>어휘·독해·설명·퀴즈는 주제에 맞춰 별도로 작성한 연습 자료입니다. 교과서의 원문·삽화·전체 단어장·출판사 음원은 수록하지 않았습니다. 문법은 자체 선정했으며 교과서 단원별 문법과의 일치 여부는 대조 전입니다.</p><p>개인 본문과 학습 기록은 브라우저에만 저장됩니다. 공개 저장소에는 전송하지 않습니다. 이 앱은 출판사 공식 앱이 아닙니다.</p><p>자료 경로 확인일 · ${h(B.checkedAt)}</p><p>교과서 자료 탭에서 학년·단원별 공식 자료, 본문 PDF 모음과 공개 학습 자료 ${B.resources.filter(r=>r.kind==='practice').length}개를 확인하세요. 링크 목록이며 파일별 내용 검수는 하지 않았습니다.</p></div>${B.sources.map(s=>`<div class="source-link"><a href="${h(s.url)}" target="_blank" rel="noopener noreferrer">${h(s.label)} ↗</a><small>${h(s.note)}</small></div>`).join('')}`;
+ $('#sourceBody').innerHTML=`<div class="source-info"><p><b>${h(B.publisher)} ${h(B.author)} · ${h(B.edition)}</b></p><p>중1·중2의 일반 단원 8개씩을 구성했습니다. 중1·중2만 학습 범위에 포함합니다. 특별 단원은 미수록입니다.</p><p>어휘·독해·설명·퀴즈는 주제에 맞춰 별도로 작성한 연습 자료입니다. 교과서의 원문·삽화·전체 단어장·출판사 음원은 수록하지 않았습니다. 문법은 자체 선정했으며 교과서 단원별 문법과의 일치 여부는 대조 전입니다.</p><p>듣기는 Kokoro의 미국식 영어 여성 AI 음성입니다. 직접 입력한 문장도 기기 안에서 음성으로 만들며 첫 이용에 약 90MB의 모델을 내려받습니다.</p><p>개인 본문과 학습 기록은 브라우저에만 저장됩니다. 공개 저장소에는 전송하지 않습니다. 이 앱은 출판사 공식 앱이 아닙니다.</p><p>자료 경로 확인일 · ${h(B.checkedAt)}</p><p>교과서 자료 탭에서 학년·단원별 공식 자료, 본문 PDF 모음과 공개 학습 자료 ${B.resources.filter(r=>r.kind==='practice').length}개를 확인하세요. 링크 목록이며 파일별 내용 검수는 하지 않았습니다.</p></div>${B.sources.map(s=>`<div class="source-link"><a href="${h(s.url)}" target="_blank" rel="noopener noreferrer">${h(s.label)} ↗</a><small>${h(s.note)}</small></div>`).join('')}`;
  $('#sourceDialog').showModal();
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  const action=b.dataset.action;
+ if(b.dataset.say){speak(b.dataset.say);return;}
+ if(b.dataset.grammarMode){grammarMode=b.dataset.grammarMode;renderPanel();return;}
+ if(b.dataset.readingLayout){readingLayout=b.dataset.readingLayout;renderPanel();return;}
+ if(action==='grammar-quiz'){startQuiz('grammar');return;}
  if(action==='word-cards'||action==='word-list'){wordMode=action==='word-cards'?'cards':'list';renderPanel();return;}
  if(action==='flash-flip'){flashRevealed=true;renderPanel();return;}
  if(action==='flash-known'||action==='flash-again'){if(flashRevealed)reviewWord(action==='flash-known');return;}
- if(action==='flash-next'||action==='flash-prev'){flashIndex=(flashIndex+(action==='flash-next'?1:unit().words.length-1))%unit().words.length;flashRevealed=false;renderPanel();return;}
+ if(action==='flash-next'||action==='flash-prev'){moveWord(action==='flash-next'?1:-1);return;}
  if(action==='due-review'){
   const due=dueWords()[0];const target=due?.u||unit();wordMode='cards';flashIndex=due?.i||0;flashRevealed=false;
   const tab=target.pending?'text':'words';
   if(route.grade===target.grade&&route.number===target.number&&route.tab===tab)render();else{pendingFlashIndex=flashIndex;setRoute(target.grade,target.number,tab);}return;
  }
- if(b.dataset.grade){setRoute(Number(b.dataset.grade),1,route.tab==='home'?'home':Number(b.dataset.grade)===3?'text':'words');return;}
- if(b.dataset.unit){setRoute(route.grade,Number(b.dataset.unit),route.grade===3?'text':'words');return;}
+ if(b.dataset.grade){setRoute(Number(b.dataset.grade),1,route.tab==='home'?'home':'words');return;}
+ if(b.dataset.unit){setRoute(route.grade,Number(b.dataset.unit),'words');return;}
  if(b.dataset.tab){if(b.dataset.tab!==route.tab){stopRecording();quiz=null;setRoute(route.grade,route.number,b.dataset.tab);}return;}
  if(b.dataset.wordSpeak!==undefined){speak(unit().words[Number(b.dataset.wordSpeak)].en);return;}
  if(b.dataset.grammarSpeak!==undefined){speak(unit().grammar[Number(b.dataset.grammarSpeak)].en);return;}
@@ -255,7 +249,7 @@ document.addEventListener('click',e=>{
  if(action==='stop-audio')stopAudio();
  if(action==='reading-all')speakAll(unit().reading);
  if(action==='text-all')speakAll(state.texts[unit().id]?.reading||[]);
- if(['speak-model','speak-slow'].includes(action)){const rs=state.texts[unit().id]?.reading||unit().reading;speak(rs[speechIndex].en,action==='speak-slow'?.65:.85);}
+ if(['speak-model','speak-slow'].includes(action)){const rs=state.texts[unit().id]?.reading||unit().reading;speak(rs[speechIndex].en,action==='speak-slow'?.65:1);}
  if(['speaking-next','speaking-prev'].includes(action)){const rs=state.texts[unit().id]?.reading||unit().reading;stopAudio();stopRecording();speechIndex=(speechIndex+(action==='speaking-next'?1:rs.length-1))%rs.length;renderPanel();}
  if(action==='record')record();
  if(action==='save-text')saveText();
@@ -264,10 +258,11 @@ document.addEventListener('click',e=>{
  if(action==='delete-text'&&confirm('이 단원에 저장한 개인 본문을 삭제할까요?')){const id=unit().id;delete state.texts[id];Object.keys(state.wrong).filter(k=>k.startsWith(`${id}:personal:`)).forEach(k=>delete state.wrong[k]);save();render();}
 });
 document.addEventListener('submit',e=>{if(e.target.id==='blankForm'){e.preventDefault();const value=$('#blankAnswer').value.trim();if(value)answer(value);}});
-document.addEventListener('change',e=>{if(e.target.id==='speedSelect')readingSpeed=Number(e.target.value);if(e.target.id==='backupFile')importData(e.target.files[0]);});
+document.addEventListener('change',e=>{if(e.target.id==='speedSelect'){readingSpeed=Number(e.target.value);if(nativePlayer)nativePlayer.playbackRate=readingSpeed;}if(e.target.id==='backupFile')importData(e.target.files[0]);});
 window.addEventListener('hashchange',()=>{stopAudio();stopRecording();route=parseRoute();quiz=null;speechIndex=0;flashIndex=pendingFlashIndex??0;pendingFlashIndex=null;flashRevealed=false;state.last=`${route.grade}/${route.number}/${route.tab}`;save();render();if(window.innerWidth<=720&&route.tab!=='home')$('.study-area').scrollIntoView({block:'start'});});
 window.addEventListener('popstate',()=>{stopAudio();stopRecording();route=parseRoute();quiz=null;speechIndex=0;render();});
 window.addEventListener('pagehide',()=>{stopAudio();stopRecording();});
 if(window.innerWidth<=720)document.querySelector('.lesson-disclosure').open=false;
 route=parseRoute();render();
+if(window.innerWidth<=720&&route.tab!=='home')document.querySelector('.study-area').scrollIntoView({block:'start'});
 if(storageProblem)toast('저장된 학습 기록을 읽지 못했습니다.');
