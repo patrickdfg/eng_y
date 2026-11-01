@@ -1,0 +1,11 @@
+{
+  "name": "영어하루 · YBM 박준언",
+  "short_name": "YBM 영어하루",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fdfaf6",
+  "theme_color": "#b65335",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

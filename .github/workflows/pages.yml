@@ -1,0 +1,36 @@
+# 학습 앱을 검증한 뒤 GitHub Pages에 배포합니다.
+name: 영어하루 검증 및 배포
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: 학습 자료와 채점 검증
+        run: node --test test.mjs
+      - name: 공개 파일 준비
+        run: node build.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: GitHub Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v4

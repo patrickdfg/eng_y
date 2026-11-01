@@ -1,0 +1,37 @@
+<!-- 학년과 단원을 골라 영어를 연습하는 영어하루 앱의 시작 화면입니다. -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#b65335"><meta name="description" content="2022 개정 중학 영어 단원별 자체 연습과 개인 본문 학습">
+<title>영어하루 · YBM 박준언</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css">
+<script defer src="content.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">학습 내용으로 이동</a>
+<div class="app-shell">
+<aside class="sidebar">
+<a class="brand" href="#home" aria-label="영어하루 첫 화면"><span class="brand-mark">e<span>·</span></span><span>영어하루<small>ENGLISH, EVERY DAY</small></span></a>
+<div class="book-label" id="bookLabel"></div>
+<p class="nav-caption">나의 교과서</p><div class="grades" id="grades" aria-label="학년 선택"></div>
+<p class="nav-caption">단원 목록</p><nav id="lessons" class="lessons" aria-label="단원 선택"></nav>
+<div class="sidebar-bottom"><p>조금씩, 매일 쌓이는 영어.</p><button class="text-button" data-action="sources">자료 출처 및 수록 범위 ↗</button></div>
+</aside>
+<div class="main-wrap">
+<header class="topbar"><span class="edition">2022 개정 교육과정</span><div><button class="text-button" data-action="sources">자료 안내</button><span class="local-label">이 기기에 저장</span></div></header>
+<main id="main" tabindex="-1">
+<section class="hero"><div><p class="eyebrow" id="eyebrow">MY ENGLISH ROUTINE</p><h1 id="greeting">오늘도 한 걸음,<br>영어와 가까워지기.</h1><p id="heroCopy">단어부터 문장까지, 나의 속도로 시작해요.</p></div><div class="hero-art" aria-hidden="true"><span class="orbit one"></span><span class="orbit two"></span><span class="bubble hello">Hello!</span><span class="bubble abc">Aa</span><span class="book-shape"><i></i><b>one<br>small<br>step.</b></span><span class="spark">✳</span></div></section>
+<section class="stats" aria-label="학습 현황"><div><span>수록된 주제 어휘</span><strong id="wordCount"></strong></div><div><span>풀어 본 문제</span><strong id="attemptCount">0<span>문제</span></strong></div><div><span>나의 정답률</span><strong id="accuracy">—</strong></div><div><span>다시 볼 오답</span><strong id="wrongCount">0<span>문제</span></strong></div></section>
+<section class="study-area"><div class="lesson-heading"><div><p class="eyebrow" id="unitNumber"></p><h2 id="unitTitle"></h2><p id="unitTopic"></p></div><button class="outline-button" data-action="quiz-start">단원 문제 풀기 ↗</button></div>
+<p class="content-note" id="contentNote"></p>
+<nav class="tabs" id="tabs" aria-label="학습 메뉴"></nav>
+<div id="panel" class="panel" aria-live="polite"></div>
+</section>
+<footer>코딩하루 · 영어하루 <span id="footerBook"></span></footer>
+</main>
+</div>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="sourceDialog"><div class="dialog-heading"><h2>자료 출처와 수록 범위</h2><button class="icon-button" data-action="close-dialog" aria-label="닫기">×</button></div><div id="sourceBody"></div></dialog>
+</body></html>
