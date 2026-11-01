@@ -19,12 +19,13 @@ test('중1·중2의 16단원과 수록 내용이 일치한다',()=>{
  assert.equal(run('B.units.length'),16);
  assert.equal(run('new Set(B.units.map(u=>u.id)).size'),16);
  assert.equal(run('B.units.reduce((n,u)=>n+u.words.length,0)'),96);
- assert.equal(run('B.units.reduce((n,u)=>n+questions(u).length,0)'),256);
+ assert.ok(run('B.units.reduce((n,u)=>n+questions(u).length,0)')>700);
+ assert.equal(run('Object.keys(B.texts).length'),16);
  assert.equal(run('B.units.every(u=>u.reading.length===4&&u.grammar.length===2&&u.words.length===6)'),true);
  assert.equal(run('B.units.every(u=>questions(u).every(q=>q.type!=="choice"||(q.options.length===4&&new Set(q.options).size===4&&q.answer>=0&&q.answer<4)))'),true);
 });
 test('어휘·문법·빈칸 문제 ID가 겹치지 않는다',()=>{
- const {run}=context();assert.equal(run('new Set(B.units.flatMap(questions).map(q=>q.id)).size'),256);
+ const {run}=context();assert.equal(run('new Set(B.units.flatMap(questions).map(q=>q.id)).size'),run('B.units.flatMap(questions).length'));
  assert.equal(run('B.units.flatMap(questions).filter(q=>q.type==="blank").every(q=>q.prompt.includes("_____")&&q.answer.length>0)'),true);
 });
 test('오답을 저장하고 중복 클릭은 중복 채점하지 않는다',()=>{
@@ -172,4 +173,26 @@ test('대화 선택 뒤 본문 편집·백업 복원은 대화를 보존한다',
  assert.equal(run('state.texts[unit().id].activities.reading[0].en'),'B: Good morning.');
  run('route.tab="reading";readingSection="body"');
  assert.ok(run('expandedReadingPanel().includes("Edited paragraph.")'));assert.ok(!run('expandedReadingPanel().includes("B: Good morning.")'));
+});
+
+test('개인 자료 등록 없이 모든 단원의 본문·활동 전체를 읽고 문제를 푼다',()=>{
+ const {run,stored}=context();
+ assert.equal(run('Object.keys(state.texts).length'),0);assert.equal(stored.size,0);
+ assert.equal(run(`units.every(u=>{
+  route={grade:u.grade,number:u.number,tab:'reading'};readingSection='body';
+  const body=B.texts[u.id];if(!body||body.reading.length<15||!expandedReadingPanel().includes(h(body.reading.at(-1).en)))return false;
+  readingSection='activities';return personalText()===body.activities&&expandedReadingPanel().includes(h(body.activities.raw.split('\\n').at(-1)));
+ })`),true);
+ run('route={grade:1,number:1,tab:"reading"};readingSection="body";startQuiz("text")');
+ assert.ok(run('quiz.items.length')>15);assert.equal(run('quiz.items[0].label'),'교과서 본문 빈칸');
+ assert.ok(run('questions(unit()).filter(q=>q.id.includes(":book:")).length')>15);
+ assert.equal(run('Object.keys(state.texts).length'),0);
+});
+
+test('기본 본문은 등록 안내나 PDF 대신 전체 글과 원문 예문을 표시한다',()=>{
+ const {run}=context();run('route={grade:1,number:1,tab:"reading"}');
+ const panel=run('expandedReadingPanel()');
+ assert.ok(panel.includes('교과서 본문·대화 자료'));assert.ok(!panel.includes('교과서 원문으로 연결'));
+ assert.ok(!panel.includes('내 본문 등록'));assert.ok(!panel.includes('<iframe'));
+ assert.equal(run('units.some(u=>{route={grade:u.grade,number:u.number,tab:"words"};return u.words.some(w=>wordExamples(w)[0].source==="교과서 본문에서")})'),true);
 });
