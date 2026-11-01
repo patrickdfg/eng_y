@@ -1,0 +1,28 @@
+// 교과서 첫 단원 본문의 검수된 한국어 해석을 제공합니다.
+window.APP_TRANSLATIONS = {
+  "Hi, everyone!": "안녕하세요, 여러분!",
+  "I’m Harin.": "저는 하린이에요.",
+  "I am an active person.": "저는 활동적인 사람이에요.",
+  "I exercise a lot.": "저는 운동을 많이 해요.",
+  "I love running.": "저는 달리기를 정말 좋아해요.",
+  "I often run in the park, and I enjoy the fresh air there.": "저는 공원에서 자주 달리며 그곳의 신선한 공기를 즐겨요.",
+  "I use a running app.": "저는 달리기 앱을 사용해요.",
+  "It records my speed, time, and steps.": "그 앱은 제 속도와 시간, 걸음 수를 기록해요.",
+  "It is very helpful.": "그 앱은 정말 유용해요.",
+  "Hello!": "안녕하세요!",
+  "My name is Mike.": "제 이름은 마이크예요.",
+  "I’m very interested in fashion.": "저는 패션에 관심이 아주 많아요.",
+  "I take pictures of my clothes.": "저는 제 옷을 사진으로 찍어요.",
+  "Then, I post them on social media.": "그런 다음 사진을 소셜 미디어에 올려요.",
+  "These pictures are my fashion diary.": "이 사진들이 저만의 패션 일기예요.",
+  "I have many followers.": "저에게는 팔로워가 많아요.",
+  "They love my posts.": "그들은 제 게시물을 좋아해요.",
+  "They leave nice comments, too.": "좋은 댓글도 남겨 줘요.",
+  "My name is Elena.": "제 이름은 엘레나예요.",
+  "I’m into donuts these days.": "저는 요즘 도넛에 푹 빠져 있어요.",
+  "I visit donut shops in my free time.": "시간이 날 때 도넛 가게를 방문해요.",
+  "I mark good shops on my map app.": "마음에 드는 가게를 지도 앱에 표시해요.",
+  "Then, I visit them again with my friends.": "그리고 친구들과 그 가게를 다시 찾아가요.",
+  "Donuts are not just a snack for me.": "저에게 도넛은 단순한 간식이 아니에요.",
+  "They are my happiness!": "도넛은 저의 행복이에요!"
+};
