@@ -77,7 +77,7 @@ function queueReadingTranslations() {
  for (const r of readingSource()) {
   const en = r.en;
   if (!needsTranslation(r) || translationPending.has(en) || translationFailed.has(en)) continue;
-  if (encodeURIComponent(en).length > 1300) { translationFailed.add(en); continue; }
+  if (encodeURIComponent(en).length > 500) { translationFailed.add(en); continue; }
   translationPending.add(en);
   translationQueue.push(en);
  }
