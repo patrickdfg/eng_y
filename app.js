@@ -26,6 +26,64 @@ let pendingFlashIndex=null;
 const tabs = [['home','⌂','학습 홈'],['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문'],['resources','↗','교과서 자료']];
 const units = B.units;
 B.texts=prepareTexts(B.texts||{});
+
+const translationCacheKey = `english-haru-${B.code}-translations-v1`;
+const fixedTranslations = window.APP_TRANSLATIONS || {};
+let fetchedTranslations = {};
+try { fetchedTranslations = JSON.parse(localStorage.getItem(translationCacheKey) || '{}') || {}; } catch {}
+const translationQueue = [];
+const translationPending = new Set();
+const translationFailed = new Set();
+let translationWorkers = 0;
+let translationScope = '';
+function translationFor(r) { return r.ko || fixedTranslations[r.en] || fetchedTranslations[r.en] || ''; }
+function canAutoTranslate() { return route.tab === 'reading' && !!B.texts[unit().id] && !state.texts[unit().id]; }
+function needsTranslation(r) { return /[A-Za-z]/.test(r.en) && !/[가-힣]/.test(r.en) && !translationFor(r); }
+function translationStatus(r) { return translationFailed.has(r.en) ? '번역을 가져오지 못했습니다. 해석 숨기기 후 다시 보기를 눌러 주세요.' : '해석을 불러오는 중…'; }
+function updateVisibleTranslation(en, ko) {
+ if (!translations || !canAutoTranslate()) return;
+ readingSource().forEach((r,i) => {
+  if (r.en !== en) return;
+  const el = document.querySelector(`#panel [data-translation-index="${i}"]`);
+  if (el) el.textContent = ko;
+ });
+}
+function pumpTranslationQueue() {
+ if (typeof fetch !== 'function') return;
+ while (translationWorkers < 2 && translationQueue.length) {
+  const en = translationQueue.shift();
+  translationWorkers++;
+  fetch(`https://api.mymemory.translated.net/get?${new URLSearchParams({q:en,langpair:'en|ko'})}`)
+   .then(async res => {
+    if (!res.ok) throw Error('번역 요청 실패');
+    const data = await res.json();
+    const ko = String(data?.responseData?.translatedText || '').trim();
+    if (Number(data?.responseStatus) !== 200 || !/[가-힣]/.test(ko)) throw Error('번역 결과 없음');
+    fetchedTranslations[en] = ko;
+    try { localStorage.setItem(translationCacheKey, JSON.stringify(fetchedTranslations)); } catch {}
+    updateVisibleTranslation(en, ko);
+   })
+   .catch(() => {
+    translationFailed.add(en);
+    updateVisibleTranslation(en, '번역을 가져오지 못했습니다. 해석 숨기기 후 다시 보기를 눌러 주세요.');
+   })
+   .finally(() => { translationPending.delete(en); translationWorkers--; pumpTranslationQueue(); });
+ }
+}
+function queueReadingTranslations() {
+ if (!translations || !canAutoTranslate() || typeof fetch !== 'function') return;
+ const scope = `${unit().id}:${readingSection}`;
+ if (translationScope !== scope) { translationQueue.length = 0; translationScope = scope; }
+ for (const r of readingSource()) {
+  const en = r.en;
+  if (!needsTranslation(r) || translationPending.has(en) || translationFailed.has(en)) continue;
+  if (encodeURIComponent(en).length > 1300) { translationFailed.add(en); continue; }
+  translationPending.add(en);
+  translationQueue.push(en);
+ }
+ pumpTranslationQueue();
+}
+
 function unit(){return units.find(u=>u.grade===route.grade&&u.number===route.number);}
 function save(){
   try { localStorage.setItem(storageKey,JSON.stringify(state)); return true; }
@@ -83,7 +141,7 @@ function render(){
 function wordPanel(){return wordMode==='cards'?flashcardPanel():`<div class="section-top"><h3>한눈에 보는 단어</h3><div class="segmented"><button data-action="word-cards" aria-pressed="false">카드</button><button class="selected" data-action="word-list" aria-pressed="true">목록</button></div></div>`+wordListPanel();}
 function wordListPanel(){const u=unit();return `<div class="section-top"><h3>오늘의 주제 어휘 <span class="chip">${u.words.length} WORDS</span></h3><span class="subtle">들어 보고, 아는 단어를 표시해요.</span></div><div class="word-grid">${u.words.map((w,i)=>`<article class="word-card ${state.known[`${u.id}:${i}`]?'known':''}"><span class="word-index">WORD ${String(i+1).padStart(2,'0')}</span><span class="mini-picture" role="img" aria-label="${h(w.ko)} 그림 힌트">${window.WORD_DETAILS[w.en].picture}</span><h4 lang="en">${h(w.en)}</h4><p>${h(w.ko)}</p><div class="word-controls"><button class="icon-button" data-word-speak="${i}" aria-label="${h(w.en)} 듣기">▷</button><button class="know-button" data-known="${i}" aria-pressed="${!!state.known[`${u.id}:${i}`]}">${state.known[`${u.id}:${i}`]?'✓ 외웠어요':'○ 외웠어요'}</button></div><details><summary>예문 3개 보기</summary>${wordExampleHTML(w)}</details></article>`).join('')}</div><p class="private-note">교과서 전체 단어장이 아닌 주제별 자체 선정 어휘입니다.</p>`;}
 function grammarPanel(){return expandedGrammarPanel();}
-function readerHTML(reading,prefix='reading'){return reading.map((r,i)=>`<article class="sentence"><span class="sentence-number">${String(i+1).padStart(2,'0')}</span><div class="sentence-text"><p class="en" lang="en">${h(r.en)}</p>${translations&&r.ko?`<p class="ko">${h(r.ko)}</p>`:''}</div><button class="icon-button" data-${prefix}-speak="${i}" aria-label="${i+1}번 문장 듣기">▷</button></article>`).join('');}
+function readerHTML(reading,prefix='reading'){return reading.map((r,i)=>{const ko=translationFor(r);return `<article class="sentence"><span class="sentence-number">${String(i+1).padStart(2,'0')}</span><div class="sentence-text"><p class="en" lang="en">${h(r.en)}</p>${translations&&(ko||canAutoTranslate()&&needsTranslation(r))?`<p class="ko" data-translation-index="${i}">${h(ko||translationStatus(r))}</p>`:''}</div><button class="icon-button" data-${prefix}-speak="${i}" aria-label="${i+1}번 문장 듣기">▷</button></article>`}).join('');}
 function readingTools(kind){return `<div class="reading-tools"><button class="outline-button" data-action="${kind==='text'?'text-all':'reading-all'}">▷ 전체 듣기</button><button class="outline-button" data-action="stop-audio">정지</button><button class="outline-button" data-action="toggle-translations" aria-pressed="${translations}">${translations?'해석 숨기기':'해석 보기'}</button><label><span class="screen-reader">듣기 속도</span><select id="speedSelect">${[.65,.85,1].map(s=>`<option value="${s}" ${s===readingSpeed?'selected':''}>${s}배속</option>`).join('')}</select></label></div>`;}
 function readingPanel(){return expandedReadingPanel();}
 function normalize(v){return String(v).normalize('NFKC').toLowerCase().replace(/[^a-z0-9]/g,'');}
@@ -140,6 +198,7 @@ function renderPanel(){
  const u=unit();
  const unavailable=u.pending&&!['home','text','review','speaking','resources'].includes(route.tab)&&!(route.tab==='quiz'&&quiz);
  $('#panel').innerHTML=unavailable?pendingPanel():({home:homePanel,words:wordPanel,grammar:grammarPanel,reading:readingPanel,quiz:quizPanel,speaking:speakingPanel,review:reviewPanel,text:textPanel,resources:resourcesPanel}[route.tab])();
+ queueReadingTranslations();
 }
 function splitText(raw){
  return raw.split(/\r?\n/).flatMap(line=>{
@@ -264,7 +323,7 @@ document.addEventListener('click',e=>{
  if(action==='quiz-next'&&quiz?.answered){if(quiz.index===quiz.items.length-1)quiz.complete=true;else{quiz.index++;quiz.answered=false;quiz.feedback=null;}renderPanel();}
  if(action==='quiz-retry'&&quiz){const mode=quiz.mode;startQuiz(mode);}
  if(action==='quiz-exit'){quiz=null;renderPanel();}
- if(action==='toggle-translations'){translations=!translations;renderPanel();}
+ if(action==='toggle-translations'){translations=!translations;if(translations)translationFailed.clear();renderPanel();}
  if(action==='stop-audio')stopAudio();
  if(action==='reading-all')speakAll(unit().reading);
  if(action==='text-all')speakAll(personalText()?.reading||[]);
