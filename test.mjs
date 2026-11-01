@@ -221,3 +221,30 @@ test('전체 16단원 본문·활동 자료는 미리 저장된 한국어 해석
  assert.ok(!app.includes('mymemory.translated.net'));
  assert.ok(!app.includes('translationQueue'));
 });
+
+test('교과서 원문에 MP3가 없으면 기기 영어 음성으로 읽고 정지한다',()=>{
+ const {run}=context();
+ run(`let played=null;let cancels=0;
+   window.SpeechSynthesisUtterance=function(text){this.text=text;};
+   window.speechSynthesis={getVoices:()=>[{name:'기기 영어',lang:'en-US',localService:true}],cancel(){cancels++;},speak(u){played=u;}};
+ `);
+ const sentence=run('B.texts[units[0].id].reading[0].en');
+ assert.equal(run('window.NATIVE_AUDIO[B.texts[units[0].id].reading[0].en]'),undefined);
+ run('speak(B.texts[units[0].id].reading[0].en,.85)');
+ assert.equal(run('played.text'),sentence);
+ assert.equal(run('played.lang'),'en-US');
+ assert.equal(run('played.rate'),.85);
+ assert.equal(run('played.voice.name'),'기기 영어');
+ run('let finished=0;speak(B.texts[units[0].id].reading[0].en,1,()=>finished++);let past=played.onend;stopAudio();past();');
+ assert.equal(run('finished'),0);
+ run('speakAll(B.texts[units[0].id].reading.slice(0,2));let first=played;first.onend();');
+ assert.equal(run('played.text'),run('B.texts[units[0].id].reading[1].en'));
+});
+test('단어 뜻을 뒤집기 전에도 예문 세 개를 같은 학습 화면에 표시한다',()=>{
+ const {run}=context();
+ run('route={grade:1,number:1,tab:"words"};flashRevealed=false;');
+ const panel=run('flashcardPanel()');
+ assert.ok(panel.includes('word-study-layout'));
+ assert.equal((panel.match(/class="word-example"/g)||[]).length,3);
+ assert.ok(panel.includes('문장 속에서 기억해요'));
+});
