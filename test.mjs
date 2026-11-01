@@ -213,3 +213,11 @@ test('인물 호칭 뒤에서 문장을 잘못 나누지 않는다',()=>{
  assert.equal(run('splitText("Mrs. Schmidt is kind. I know her.").length'),2);
  assert.equal(run('splitText("Mrs. Schmidt is kind.")[0].en'),'Mrs. Schmidt is kind.');
 });
+
+test('전체 16단원 본문·활동 자료는 미리 저장된 한국어 해석을 표시한다',()=>{
+ const {run}=context();
+ assert.equal(run('units.every(u=>{const t=B.texts[u.id];return !!t&&[t.reading,t.activities.reading].every(lines=>lines.filter(r=>/[A-Za-z]/.test(r.en)&&!/[가-힣]/.test(r.en)).every(r=>!!translationFor(r)))})'),true);
+ const app=readFileSync('app.js','utf8');
+ assert.ok(!app.includes('mymemory.translated.net'));
+ assert.ok(!app.includes('translationQueue'));
+});
