@@ -1,0 +1,41 @@
+// 오늘의 학습, 실제 활동 기록과 단어 복습을 안내합니다.
+'use strict';
+let wordMode='cards';
+let flashIndex=0;
+let flashRevealed=false;
+const iconPaths={home:'M3 10 12 3l9 7v10H3Z M9 20v-7h6v7',book:'M12 5v16 M12 5C8 2 3 4 3 4v15s5-2 9 2c4-4 9-2 9-2V4s-5-2-9 1',arrow:'M5 12h14 M13 6l6 6-6 6',check:'m5 12 4 4L19 6',clock:'M12 8v5l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',sound:'M11 5 6 9H3v6h3l5 4Z M15 8c3 2 3 6 0 8 M18 5c5 4 5 10 0 14',star:'m12 3 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z',layers:'m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5 M2 16l10 5 10-5',target:'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M17 12a5 5 0 1 1-10 0 5 5 0 0 1 10 0 M12 10v4 M10 12h4',mic:'M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0Z M5 10v2a7 7 0 0 0 14 0v-2 M12 19v3 M8 22h8',link:'M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2 M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2'};
+function icon(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${iconPaths[name]||iconPaths.book}"/></svg>`;}
+function studyDay(date=new Date()){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);return ['year','month','day'].map(k=>parts.find(p=>p.type===k).value).join('-');}
+function daysAgo(n){const date=new Date(studyDay()+'T12:00:00+09:00');date.setTime(date.getTime()-n*86400000);return studyDay(date);}
+function activity(){return state.activity[studyDay()]||{answers:0,cards:0};}
+function recordActivity(kind){const key=studyDay();state.activity[key]||={answers:0,cards:0};state.activity[key][kind]++;}
+function streak(){let count=0;let offset=state.activity[studyDay()]?0:1;while(state.activity[daysAgo(offset)]&&count<3660){count++;offset++;}return count;}
+function dueWords(){return B.units.flatMap(u=>u.words.map((w,i)=>({u,w,i,review:state.wordReview[`${u.id}:${i}`]}))).filter(x=>x.review&&x.review.due<=Date.now());}
+function reviewWord(remember){
+ const u=unit();const id=`${u.id}:${flashIndex}`;const previous=state.wordReview[id];const reps=remember?(previous?.reps||0)+1:0;const interval=remember?[1,3,7,14][Math.min(reps-1,3)]:0;
+ state.wordReview[id]={reps,interval,due:Date.now()+interval*86400000};state.known[id]=remember;recordActivity('cards');save();
+ flashIndex=(flashIndex+1)%u.words.length;flashRevealed=false;stats();renderPanel();renderCoach();
+ toast(remember?`${interval}일 뒤에 다시 복습해요.`:'이 단어는 오늘 다시 만나게 돼요.');
+}
+function flashcardPanel(){
+ const u=unit();flashIndex%=u.words.length;const w=u.words[flashIndex];const known=u.words.filter((_,i)=>state.known[`${u.id}:${i}`]).length;
+ return `<div class="section-top"><div><p class="eyebrow">RECALL, THEN REVEAL</p><h3>뜻을 보기 전에, 먼저 떠올려요.</h3></div><div class="segmented"><button class="selected" data-action="word-cards" aria-pressed="true">카드</button><button data-action="word-list" aria-pressed="false">목록</button></div></div><div class="flash-progress"><span>기억한 단어 ${known} / ${u.words.length}</span><span>${flashIndex+1}번째 카드</span></div><progress value="${known}" max="${u.words.length}" aria-label="기억한 단어"></progress><article class="flashcard ${flashRevealed?'revealed':''}"><span class="flash-label">LESSON ${String(u.number).padStart(2,'0')} · VOCABULARY</span><button class="icon-button card-sound" data-word-speak="${flashIndex}" aria-label="${h(w.en)} 듣기">${icon('sound')}</button><h4 lang="en">${h(w.en)}</h4>${flashRevealed?`<p class="flash-meaning">${h(w.ko)}</p><span class="flash-hint">얼마나 잘 기억했나요?</span>`:`<p class="flash-question">어떤 뜻일까요?</p><button class="reveal-button" data-action="flash-flip">뜻 확인하기 ${icon('arrow')}</button>`}</article><div class="flash-assess"><button class="outline-button" data-action="flash-again" ${flashRevealed?'':'disabled'}>↺ 다시 볼게요<small>오늘 다시</small></button><button class="primary-button" data-action="flash-known" ${flashRevealed?'':'disabled'}>${icon('check')} 기억해요<small>간격을 두고 복습</small></button></div><div class="flash-pagination"><button class="icon-button" data-action="flash-prev" aria-label="이전 단어">←</button><span>${flashIndex+1} / ${u.words.length}</span><button class="icon-button" data-action="flash-next" aria-label="다음 단어">→</button></div><p class="private-note">주제별 자체 선정 어휘 · 듣기는 기기의 영어 음성입니다.</p>`;
+}
+function homePanel(){
+ const selected=units.filter(u=>u.grade===route.grade);
+ return `<div class="section-top course-heading"><div><p class="eyebrow">YOUR LEARNING PATH</p><h3>나의 교과서 코스</h3><p class="subtle">작은 단원 하나가, 더 큰 자신감으로.</p></div><span class="chip">중${route.grade} · 8 UNITS</span></div><div class="course-grid">${selected.map(u=>{const known=u.words.filter((_,i)=>state.known[`${u.id}:${i}`]).length;const percent=u.words.length?Math.round(known/u.words.length*100):0;return `<button class="course-card ${u.number===route.number?'current':''}" data-unit="${u.number}"><div class="course-meta"><span>UNIT ${String(u.number).padStart(2,'0')}</span><span>${u.number===route.number?'이어서 학습':u.pending?'내 본문으로 학습':percent===100?'단어 학습 완료':'학습하기'} ${icon('arrow')}</span></div><h4 lang="en">${h(u.title)}</h4><p>${h(u.topic)}</p><div class="course-foot"><span>${u.pending?'본문 등록 후 시작':`단어 ${known}/${u.words.length}개 기억`}</span><span>${u.pending?'＋':percent+'%'}</span></div><div class="mini-progress"><i style="width:${percent}%"></i></div></button>`;}).join('')}</div><div class="section-top tools-heading"><h3>나에게 필요한 연습</h3><span class="subtle">다른 방법으로 한 번 더</span></div><div class="quick-tools"><button data-tab="reading">${icon('book')}<strong>문장 읽기</strong><span>문맥 속에서 이해해요</span></button><button data-tab="speaking">${icon('mic')}<strong>소리 내어 말하기</strong><span>듣고, 녹음하고, 비교해요</span></button><button data-tab="resources">${icon('layers')}<strong>교과서 자료</strong><span>본문·음원·학습지 찾기</span></button></div>`;
+}
+function renderCoach(){
+ const today=activity();const goal=Math.min(10,today.answers);const due=dueWords();
+ $('#coachRail').innerHTML=`<section class="daily-card"><div class="rail-heading"><h3>오늘의 작은 목표</h3>${icon('target')}</div><div class="goal-ring" style="--progress:${goal*10}%"><strong>${goal}<small>/ 10문제</small></strong></div><p>${goal===10?'오늘의 목표를 달성했어요!':'매일 조금씩, 실력이 쌓여요.'}</p><div class="goal-summary"><span>문제 풀기</span><b>${today.answers}문제</b></div><div class="goal-summary"><span>단어 카드 연습</span><b>${today.cards}회</b></div></section><section class="activity-card"><div class="rail-heading"><h3>나의 학습 리듬</h3><span>${streak()}일 연속</span></div><div class="week-grid">${Array.from({length:7},(_,i)=>{const day=daysAgo(6-i);const a=state.activity[day];const date=new Date(day+'T12:00:00+09:00');return `<div class="week-day ${a?'done':''} ${day===studyDay()?'today':''}" title="${day}: ${a?(a.answers+a.cards)+'회 학습':'아직 학습 기록 없음'}"><span>${new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',weekday:'narrow'}).format(date)}</span><b>${a?'✓':day.slice(-2)}</b></div>`;}).join('')}</div><p class="private-note">문제와 카드 연습을 한 날을 기록해요.</p></section><section class="review-callout"><span class="rail-icon">${icon('star')}</span><h3>${due.length?`다시 만날 단어 ${due.length}개`:'배운 것을 오래 기억해요'}</h3><p>${due.length?'복습할 때가 된 단어부터 만나 보세요.':'단어 카드를 학습하면 복습할 때를 알려 드려요.'}</p><button class="outline-button" data-action="due-review">${due.length?'단어 복습하기':'단어 카드 시작'} ${icon('arrow')}</button></section><div class="rail-note">${icon('book')}<p><b>나만의 교과서, 나만의 속도.</b><br>개인 본문과 기록은 이 기기에 저장돼요.</p></div>`;
+}
+function renderDashboard(){
+ document.body.classList.toggle('home-view',route.tab==='home');
+ $('#pageTitle').textContent=route.tab==='home'?'오늘의 학습':route.tab==='resources'?'교과서 자료실':route.tab==='review'?'복습 노트':'나의 학습 공간';
+ $('#pageDate').textContent=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'long'}).format(new Date());
+ $('#resumeTitle').textContent=`중${route.grade} · ${unit().number}과 ${unit().title}`;
+ $('#heroStart').dataset.tab=unit().pending?'text':'words';
+ $('#heroStart').innerHTML=`${state.attempts||Object.keys(state.known).length?'이어서 학습하기':'오늘의 학습 시작'} ${icon('arrow')}`;
+ document.querySelectorAll('[data-main-nav]').forEach(n=>n.classList.toggle('active',n.dataset.tab===route.tab));
+ renderCoach();
+}

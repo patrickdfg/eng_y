@@ -8,8 +8,8 @@ const storageKey = `english-haru-${B.code}-v1`;
 let saved = {};
 let storageProblem = false;
 try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { storageProblem = true; }
-let state = {known:{}, wrong:{}, attempts:0, correct:0, texts:{}, last:'1/1/words', ...saved};
-if (!state.known || !state.wrong || !state.texts) state = {known:{},wrong:{},attempts:0,correct:0,texts:{},last:'1/1/words'};
+let state = {known:{}, wrong:{}, attempts:0, correct:0, texts:{}, activity:{}, wordReview:{}, last:'1/1/home', ...saved};
+if (!state.known || !state.wrong || !state.texts) state = {known:{},wrong:{},attempts:0,correct:0,texts:{},activity:{},wordReview:{},last:'1/1/home'};
 let route = {grade:1, number:1, tab:'words'};
 let quiz = null;
 let speechIndex = 0;
@@ -22,7 +22,8 @@ let recordingUrl = null;
 let recordingToken = 0;
 let recordingBusy = false;
 let toastTimer;
-const tabs = [['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문'],['resources','↗','교과서 자료']];
+let pendingFlashIndex=null;
+const tabs = [['home','⌂','학습 홈'],['words','Aa','단어'],['grammar','≋','문법'],['reading','▤','읽기'],['quiz','✓','문제풀기'],['speaking','◌','말하기'],['review','↺','오답노트'],['text','＋','내 본문'],['resources','↗','교과서 자료']];
 const pending = Array.from({length:8},(_,i)=>({id:`${B.code}3-${i+1}`,grade:3,number:i+1,title:B.grade3Titles[i]||`${i+1}과 · 내 본문`,verified:!!B.grade3Titles[i],topic:B.grade3Titles[i]?'공식 단원명 확인 · 개인 본문으로 학습':'2022 개정 단원 정보 확인 전',words:[],grammar:[],reading:[],pending:true}));
 const units = [...B.units,...pending];
 function unit(){return units.find(u=>u.grade===route.grade&&u.number===route.number);}
@@ -69,7 +70,7 @@ function speakAll(reading){
   let token=speechToken;next();
 }
 function stats(){
- $('#wordCount').innerHTML=`${B.units.reduce((n,u)=>n+u.words.length,0)}<span>개</span>`;
+ $('#wordCount').innerHTML=`${B.units.reduce((n,u)=>n+u.words.filter((_,i)=>state.known[`${u.id}:${i}`]).length,0)}<span>/ ${B.units.reduce((n,u)=>n+u.words.length,0)}개</span>`;
  $('#attemptCount').innerHTML=`${state.attempts}<span>문제</span>`;
  $('#accuracy').textContent=state.attempts?`${Math.round(state.correct/state.attempts*100)}%`:'—';
  $('#wrongCount').innerHTML=`${Object.keys(state.wrong).length}<span>문제</span>`;
@@ -87,13 +88,14 @@ function render(){
  $('#unitTopic').textContent=u.topic;
  $('#contentNote').textContent=u.verified?'공식 2022 개정 단원명을 확인했습니다. 교과서 자료에서 원본을 확인하고 내 본문에 등록해 학습하세요.':u.pending?'2022 개정 교과서의 단원명·본문 대조 전입니다. 내 본문에서 개인 자료를 등록해 학습하세요.':'단원 주제에 맞춰 별도로 만든 연습 자료입니다. 교과서 원문·전체 어휘 목록은 포함하지 않습니다.';
  $('#tabs').innerHTML=tabs.map(([id,icon,name])=>`<button class="tab ${route.tab===id?'active':''}" data-tab="${id}" aria-current="${route.tab===id?'page':'false'}"><span class="tab-icon" aria-hidden="true">${icon}</span>${name}</button>`).join('');
- stats();renderPanel();
+ stats();renderPanel();renderDashboard();
 }
-function wordPanel(){const u=unit();return `<div class="section-top"><h3>오늘의 주제 어휘 <span class="chip">${u.words.length} WORDS</span></h3><span class="subtle">들어 보고, 아는 단어를 표시해요.</span></div><div class="word-grid">${u.words.map((w,i)=>`<article class="word-card ${state.known[`${u.id}:${i}`]?'known':''}"><span class="word-index">WORD ${String(i+1).padStart(2,'0')}</span><h4 lang="en">${h(w.en)}</h4><p>${h(w.ko)}</p><div class="word-controls"><button class="icon-button" data-word-speak="${i}" aria-label="${h(w.en)} 듣기">▷</button><button class="know-button" data-known="${i}" aria-pressed="${!!state.known[`${u.id}:${i}`]}">${state.known[`${u.id}:${i}`]?'✓ 외웠어요':'○ 외웠어요'}</button></div></article>`).join('')}</div><p class="private-note">교과서 전체 단어장이 아닌 주제별 자체 선정 어휘입니다.</p>`;}
+function wordPanel(){return wordMode==='cards'?flashcardPanel():`<div class="section-top"><h3>한눈에 보는 단어</h3><div class="segmented"><button data-action="word-cards" aria-pressed="false">카드</button><button class="selected" data-action="word-list" aria-pressed="true">목록</button></div></div>`+wordListPanel();}
+function wordListPanel(){const u=unit();return `<div class="section-top"><h3>오늘의 주제 어휘 <span class="chip">${u.words.length} WORDS</span></h3><span class="subtle">들어 보고, 아는 단어를 표시해요.</span></div><div class="word-grid">${u.words.map((w,i)=>`<article class="word-card ${state.known[`${u.id}:${i}`]?'known':''}"><span class="word-index">WORD ${String(i+1).padStart(2,'0')}</span><h4 lang="en">${h(w.en)}</h4><p>${h(w.ko)}</p><div class="word-controls"><button class="icon-button" data-word-speak="${i}" aria-label="${h(w.en)} 듣기">▷</button><button class="know-button" data-known="${i}" aria-pressed="${!!state.known[`${u.id}:${i}`]}">${state.known[`${u.id}:${i}`]?'✓ 외웠어요':'○ 외웠어요'}</button></div></article>`).join('')}</div><p class="private-note">교과서 전체 단어장이 아닌 주제별 자체 선정 어휘입니다.</p>`;}
 function grammarPanel(){return `<div class="section-top"><h3>문장 구조를 차근차근</h3><span class="subtle">자체 선정 연습 문법</span></div>${unit().grammar.map((g,i)=>`<article class="grammar-card"><span class="chip">POINT ${i+1}</span><h3>${h(g.title)}</h3><p>${h(g.rule)}</p><div class="example"><div><strong lang="en">${h(g.en)}</strong><small>${h(g.ko)}</small></div><button class="icon-button" data-grammar-speak="${i}" aria-label="예문 듣기">▷</button></div></article>`).join('')}<p class="private-note">교과서 단원별 문법 목록과의 일치 여부는 대조 전입니다.</p>`;}
 function readerHTML(reading,prefix='reading'){return reading.map((r,i)=>`<article class="sentence"><span class="sentence-number">${String(i+1).padStart(2,'0')}</span><div class="sentence-text"><p class="en" lang="en">${h(r.en)}</p>${translations&&r.ko?`<p class="ko">${h(r.ko)}</p>`:''}</div><button class="icon-button" data-${prefix}-speak="${i}" aria-label="${i+1}번 문장 듣기">▷</button></article>`).join('');}
 function readingTools(kind){return `<div class="reading-tools"><button class="outline-button" data-action="${kind==='text'?'text-all':'reading-all'}">▷ 전체 듣기</button><button class="outline-button" data-action="stop-audio">정지</button><button class="outline-button" data-action="toggle-translations" aria-pressed="${translations}">${translations?'해석 숨기기':'해석 보기'}</button><label><span class="screen-reader">듣기 속도</span><select id="speedSelect">${[.65,.85,1].map(s=>`<option value="${s}" ${s===readingSpeed?'selected':''}>${s}배속</option>`).join('')}</select></label></div>`;}
-function readingPanel(){return `<div class="section-top"><h3>한 문장씩 읽고 듣기</h3><span class="chip">자체 독해</span></div>${readingTools('reading')}${readerHTML(unit().reading)}<p class="private-note">교과서 본문이 아닌 단원 주제에 맞춰 직접 쓴 짧은 글입니다. 듣기는 기기의 영어 음성으로 재생됩니다.</p>`;}
+function readingPanel(){return `<div class="section-top"><h3>한 문장씩 읽고 듣기</h3><span class="chip">자체 독해</span></div>${readingTools('reading')}${readerHTML(unit().reading)}<div class="reading-next"><button class="outline-button" data-tab="speaking">이 문장으로 말하기 →</button><button class="primary-button" data-action="quiz-start">문제로 확인하기 →</button></div><p class="private-note">교과서 본문이 아닌 단원 주제에 맞춰 직접 쓴 짧은 글입니다. 듣기는 기기의 영어 음성으로 재생됩니다.</p>`;}
 function normalize(v){return String(v).normalize('NFKC').toLowerCase().replace(/[^a-z0-9]/g,'');}
 function cloze(r,id,label){
  const words=r.en.match(/[A-Za-z]+(?:['’][A-Za-z]+)?/g)||[];
@@ -129,8 +131,8 @@ function answer(value){
  if(!quiz||quiz.answered||quiz.complete)return;
  const q=quiz.items[quiz.index];const correct=q.type==='choice'?Number(value)===q.answer:normalize(value)===normalize(q.answer);
  quiz.answered=true;quiz.selected=q.type==='choice'?Number(value):value;quiz.feedback={correct};
- state.attempts++;if(correct){quiz.right++;state.correct++;delete state.wrong[q.id];}else state.wrong[q.id]={question:q,unitId:unit().id,at:new Date().toISOString()};
- save();stats();renderPanel();
+ recordActivity('answers');state.attempts++;if(correct){quiz.right++;state.correct++;delete state.wrong[q.id];}else state.wrong[q.id]={question:q,unitId:unit().id,at:new Date().toISOString()};
+ save();stats();renderPanel();renderDashboard();
 }
 function reviewPanel(){const wrong=Object.values(state.wrong);return `<div class="section-top"><h3>나의 오답노트 <span class="chip">${wrong.length}문제</span></h3><span class="subtle">이 앱의 전체 학년 오답</span></div>${wrong.length?`<button class="primary-button" data-action="review-start">오답 ${wrong.length}문제 다시 풀기 →</button><div class="review-list">${wrong.map(w=>`<article class="review-item"><span class="chip">${h(w.question.label)}</span><p>${h(w.question.prompt)}</p><small>정답을 맞히면 오답노트에서 빠집니다.</small></article>`).join('')}</div>`:'<div class="empty"><h3>다시 볼 문제가 아직 없어요.</h3><p>문제를 풀다 틀리면 이곳에 모입니다. 복습에서 정답을 맞히면 목록에서 빠집니다.</p><button class="primary-button" data-action="quiz-start">단원 문제 풀기</button></div>'}`;}
 function speakingPanel(){
@@ -145,8 +147,8 @@ function textPanel(){
 }
 function renderPanel(){
  const u=unit();
- const unavailable=u.pending&&!['text','review','speaking','resources'].includes(route.tab)&&!(route.tab==='quiz'&&quiz);
- $('#panel').innerHTML=unavailable?pendingPanel():({words:wordPanel,grammar:grammarPanel,reading:readingPanel,quiz:quizPanel,speaking:speakingPanel,review:reviewPanel,text:textPanel,resources:resourcesPanel}[route.tab])();
+ const unavailable=u.pending&&!['home','text','review','speaking','resources'].includes(route.tab)&&!(route.tab==='quiz'&&quiz);
+ $('#panel').innerHTML=unavailable?pendingPanel():({home:homePanel,words:wordPanel,grammar:grammarPanel,reading:readingPanel,quiz:quizPanel,speaking:speakingPanel,review:reviewPanel,text:textPanel,resources:resourcesPanel}[route.tab])();
 }
 function splitText(raw){
  return raw.split(/\r?\n/).flatMap(line=>{
@@ -185,7 +187,7 @@ async function importData(file){
     if(!q||typeof q.id!=='string'||typeof q.prompt!=='string'||typeof q.why!=='string'||!['choice','blank'].includes(q.type)||(q.type==='choice'&&(!Array.isArray(q.options)||q.options.length!==4||!q.options.every(x=>typeof x==='string')||!Number.isInteger(q.answer)||q.answer<0||q.answer>3))||(q.type==='blank'&&typeof q.answer!=='string'))throw Error('오답 데이터가 올바르지 않습니다.');
   }
   if(!confirm('현재 개인 본문과 학습 기록을 이 백업의 내용으로 바꿀까요?'))return;
-  const previous=state;state={...s,last:state.last};if(!save()){state=previous;return;}
+  const previous=state;state={...s,activity:s.activity||{},wordReview:s.wordReview||{},last:state.last};if(!save()){state=previous;return;}
   quiz=null;render();toast('개인 본문과 학습 기록을 불러왔습니다.');
  }catch(e){toast(e instanceof SyntaxError?'백업 JSON 파일을 읽지 못했습니다.':e.message);}
 }
@@ -222,16 +224,25 @@ function sourceDialog(){
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
- if(b.dataset.grade){setRoute(Number(b.dataset.grade),1,Number(b.dataset.grade)===3?'text':'words');return;}
+ const action=b.dataset.action;
+ if(action==='word-cards'||action==='word-list'){wordMode=action==='word-cards'?'cards':'list';renderPanel();return;}
+ if(action==='flash-flip'){flashRevealed=true;renderPanel();return;}
+ if(action==='flash-known'||action==='flash-again'){if(flashRevealed)reviewWord(action==='flash-known');return;}
+ if(action==='flash-next'||action==='flash-prev'){flashIndex=(flashIndex+(action==='flash-next'?1:unit().words.length-1))%unit().words.length;flashRevealed=false;renderPanel();return;}
+ if(action==='due-review'){
+  const due=dueWords()[0];const target=due?.u||unit();wordMode='cards';flashIndex=due?.i||0;flashRevealed=false;
+  const tab=target.pending?'text':'words';
+  if(route.grade===target.grade&&route.number===target.number&&route.tab===tab)render();else{pendingFlashIndex=flashIndex;setRoute(target.grade,target.number,tab);}return;
+ }
+ if(b.dataset.grade){setRoute(Number(b.dataset.grade),1,route.tab==='home'?'home':Number(b.dataset.grade)===3?'text':'words');return;}
  if(b.dataset.unit){setRoute(route.grade,Number(b.dataset.unit),route.grade===3?'text':'words');return;}
  if(b.dataset.tab){if(b.dataset.tab!==route.tab){stopRecording();quiz=null;setRoute(route.grade,route.number,b.dataset.tab);}return;}
  if(b.dataset.wordSpeak!==undefined){speak(unit().words[Number(b.dataset.wordSpeak)].en);return;}
  if(b.dataset.grammarSpeak!==undefined){speak(unit().grammar[Number(b.dataset.grammarSpeak)].en);return;}
  if(b.dataset.readingSpeak!==undefined){speak(unit().reading[Number(b.dataset.readingSpeak)].en);return;}
  if(b.dataset.textSpeak!==undefined){speak(state.texts[unit().id].reading[Number(b.dataset.textSpeak)].en);return;}
- if(b.dataset.known!==undefined){const id=`${unit().id}:${b.dataset.known}`;state.known[id]=!state.known[id];save();renderPanel();return;}
+ if(b.dataset.known!==undefined){const id=`${unit().id}:${b.dataset.known}`;state.known[id]=!state.known[id];save();stats();renderPanel();renderCoach();return;}
  if(b.dataset.answer!==undefined){answer(Number(b.dataset.answer));return;}
- const action=b.dataset.action;
  if(action==='sources')sourceDialog();
  if(action==='close-dialog')$('#sourceDialog').close();
  if(['begin-quiz','quiz-start'].includes(action))startQuiz();
@@ -254,8 +265,9 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.id==='blankForm'){e.preventDefault();const value=$('#blankAnswer').value.trim();if(value)answer(value);}});
 document.addEventListener('change',e=>{if(e.target.id==='speedSelect')readingSpeed=Number(e.target.value);if(e.target.id==='backupFile')importData(e.target.files[0]);});
-window.addEventListener('hashchange',()=>{stopAudio();stopRecording();route=parseRoute();quiz=null;speechIndex=0;state.last=`${route.grade}/${route.number}/${route.tab}`;save();render();});
+window.addEventListener('hashchange',()=>{stopAudio();stopRecording();route=parseRoute();quiz=null;speechIndex=0;flashIndex=pendingFlashIndex??0;pendingFlashIndex=null;flashRevealed=false;state.last=`${route.grade}/${route.number}/${route.tab}`;save();render();if(window.innerWidth<=720&&route.tab!=='home')$('.study-area').scrollIntoView({block:'start'});});
 window.addEventListener('popstate',()=>{stopAudio();stopRecording();route=parseRoute();quiz=null;speechIndex=0;render();});
 window.addEventListener('pagehide',()=>{stopAudio();stopRecording();});
+if(window.innerWidth<=720)document.querySelector('.lesson-disclosure').open=false;
 route=parseRoute();render();
 if(storageProblem)toast('저장된 학습 기록을 읽지 못했습니다.');

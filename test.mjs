@@ -5,11 +5,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 function context() {
   const nodes=new Map();
-  const node=()=>({innerHTML:'',textContent:'',hidden:true,disabled:false,classList:{toggle(){},remove(){},add(){}},showModal(){},close(){},replaceChildren(){},click(){},setAttribute(){}});
-  const document={body:node(),querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s);},addEventListener(){},createElement:node};
+  const node=()=>({dataset:{},innerHTML:'',textContent:'',hidden:true,disabled:false,classList:{toggle(){},remove(){},add(){}},showModal(){},close(){},replaceChildren(){},click(){},setAttribute(){}});
+  const document={body:node(),querySelectorAll:()=>[],querySelector:s=>{if(!nodes.has(s))nodes.set(s,node());return nodes.get(s);},addEventListener(){},createElement:node};
   const stored=new Map();
   const c=vm.createContext({window:{addEventListener(){}},document,location:{hash:''},localStorage:{getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)},history:{pushState(){}},console,Intl,URL,Blob,Date,setTimeout(){},clearTimeout(){},confirm:()=>true,navigator:{}});
   vm.runInContext(readFileSync('content.js','utf8'),c);
+  vm.runInContext(readFileSync('dashboard.js','utf8'),c);
   vm.runInContext(readFileSync('app.js','utf8'),c);
   return {run:s=>vm.runInContext(s,c),nodes,stored};
 }
@@ -29,7 +30,7 @@ test('어휘·문법·빈칸 문제 ID가 겹치지 않는다',()=>{
 test('오답을 저장하고 중복 클릭은 중복 채점하지 않는다',()=>{
  const {run,stored}=context();
  run('startQuiz(); answer((quiz.items[0].answer+1)%4); answer(quiz.items[0].answer)');
- assert.equal(run('state.attempts'),1);assert.equal(run('state.correct'),0);assert.equal(run('Object.keys(state.wrong).length'),1);assert.equal(stored.size,1);
+ assert.equal(run('activity().answers'),1);assert.equal(run('state.attempts'),1);assert.equal(run('state.correct'),0);assert.equal(run('Object.keys(state.wrong).length'),1);assert.equal(stored.size,1);
  assert.equal(run('JSON.parse(localStorage.getItem(storageKey)).attempts'),1);
 });
 test('복습에서 맞힌 문제만 오답노트에서 빠진다',()=>{
@@ -76,4 +77,31 @@ test('중3 공식 단원명 확인 상태를 반영하고 개인 본문 키를 �
  assert.equal(run('unit().title'),"Be Yourself!");
  assert.equal(run('unit().verified'),true);
  assert.ok(run('pendingPanel().includes("교과서 자료 보기")'));
+});
+
+test('카드는 뜻을 확인한 뒤 평가하고 복습 날짜와 실제 활동을 기록한다',()=>{
+ const {run}=context();run('route={grade:1,number:1,tab:"words"}; flashRevealed=false');
+ assert.ok(!run('flashcardPanel()').includes('class="flash-meaning"'));
+ run('flashRevealed=true');assert.ok(run('flashcardPanel()').includes('class="flash-meaning"'));
+ run('reviewWord(true)');assert.equal(run('state.wordReview[unit().id+":0"].interval'),1);
+ assert.equal(run('state.known[unit().id+":0"]'),true);assert.equal(run('activity().cards'),1);
+ assert.equal(run('dueWords().length'),0);
+ run('flashIndex=0; reviewWord(true)');assert.equal(run('state.wordReview[unit().id+":0"].interval'),3);
+ run('flashIndex=0; reviewWord(false)');assert.equal(run('state.known[unit().id+":0"]'),false);
+ assert.equal(run('dueWords().length'),1);assert.equal(run('streak()'),1);
+});
+test('홈 방문만으로 활동을 만들지 않으며 단원과 주간 기록을 표시한다',()=>{
+ const {run,nodes}=context();run('route={grade:1,number:1,tab:"home"}; render()');
+ assert.equal(run('Object.keys(state.activity).length'),0);
+ assert.equal((nodes.get('#panel').innerHTML.match(/class="course-card/g)||[]).length,8);
+ assert.ok(nodes.get('#coachRail').innerHTML.includes('0일 연속'));
+ assert.equal(run('daysAgo(0)'),run('studyDay()'));
+ run('state.activity[daysAgo(1)]={answers:2,cards:0};state.activity[daysAgo(2)]={answers:1,cards:0}');
+ assert.equal(run('streak()'),2);
+});
+test('이전 버전 백업은 새로운 복습 필드 없이도 불러올 수 있다',async()=>{
+ const {run}=context();
+ await run('importData({text:async()=>JSON.stringify({app:"english-haru",publisher:B.code,version:1,state:{known:{},wrong:{},texts:{},attempts:0,correct:0}})})');
+ assert.equal(run('Object.keys(state.activity).length'),0);assert.equal(run('Object.keys(state.wordReview).length'),0);
+ assert.ok(run('homePanel().includes("나의 교과서 코스")'));
 });

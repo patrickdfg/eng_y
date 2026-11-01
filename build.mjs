@@ -2,7 +2,7 @@
 import { mkdir, copyFile, rm } from 'node:fs/promises';
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
-for (const file of ['index.html','style.css','app.js','content.js','icon.svg','manifest.webmanifest','.nojekyll']) {
+for (const file of ['index.html','style.css','app.js','dashboard.js','content.js','icon.svg','manifest.webmanifest','.nojekyll']) {
   await copyFile(file, `dist/${file}`);
 }
 console.log('영어하루 배포 파일 생성 완료');
