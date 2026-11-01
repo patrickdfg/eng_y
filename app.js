@@ -75,7 +75,7 @@ function render(){
  $('#unitNumber').textContent=`중${u.grade} · LESSON ${String(u.number).padStart(2,'0')}`;
  $('#unitTitle').textContent=u.pending?(state.texts[u.id]?.title||u.title):u.title;
  $('#unitTopic').textContent=u.topic;
- $('#contentNote').textContent=u.verified?'공식 2022 개정 단원명을 확인했습니다. 교과서 자료에서 원본을 확인하고 내 본문에 등록해 학습하세요.':u.pending?'2022 개정 교과서의 단원명·본문 대조 전입니다. 내 본문에서 개인 자료를 등록해 학습하세요.':'단원 주제에 맞춰 별도로 만든 연습 자료입니다. 교과서 원문·전체 어휘 목록은 포함하지 않습니다.';
+ $('#contentNote').textContent=state.texts[u.id]?'이 브라우저에 등록한 개인 자료로 학습합니다. 읽기에서 본문 전체와 대화·활동 자료를 확인하세요.':u.verified?'공식 2022 개정 단원명을 확인했습니다. 교과서 자료에서 원본을 확인하고 내 본문에 등록해 학습하세요.':u.pending?'2022 개정 교과서의 단원명·본문 대조 전입니다. 내 본문에서 개인 자료를 등록해 학습하세요.':'단원 주제에 맞춰 별도로 만든 연습 자료입니다. 교과서 원문·전체 어휘 목록은 포함하지 않습니다.';
  $('#tabs').innerHTML=tabs.map(([id,icon,name])=>`<button class="tab ${route.tab===id?'active':''}" data-tab="${id}" aria-current="${route.tab===id?'page':'false'}"><span class="tab-icon" aria-hidden="true">${icon}</span>${name}</button>`).join('');
  stats();renderPanel();renderDashboard();
 }
@@ -105,7 +105,7 @@ function questions(u){
  u.reading.forEach((r,i)=>{const q=cloze(r,`${u.id}:r${i}`,'문장 빈칸');if(q)out.push(q);});return out;
 }
 function startQuiz(mode='unit'){
- let qs=mode==='grammar'?grammarQuestions(grammarTopics(),'grammar'):mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(state.texts[unit().id]?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${state.texts[unit().id].updated}:${i}`,'내 본문 빈칸')).filter(Boolean):questions(unit());
+ let qs=mode==='grammar'?grammarQuestions(grammarTopics(),'grammar'):mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(personalText()?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${state.texts[unit().id].updated}:${route.tab==='text'?'body':readingSection}:${i}`,'내 본문 빈칸')).filter(Boolean):questions(unit());
  if(!qs.length){toast(mode==='review'?'복습할 오답이 아직 없습니다.':'학습할 문장이 아직 없습니다.');return;}
  quiz={items:qs,index:0,right:0,answered:false,feedback:null,mode,complete:false};
  if(route.tab!=='quiz'){route.tab='quiz';history.pushState(null,'',`#${route.grade}/${route.number}/quiz`);state.last=`${route.grade}/${route.number}/quiz`;save();}
@@ -126,14 +126,14 @@ function answer(value){
 }
 function reviewPanel(){const wrong=Object.values(state.wrong);return `<div class="section-top"><h3>나의 오답노트 <span class="chip">${wrong.length}문제</span></h3><span class="subtle">이 앱의 전체 학년 오답</span></div>${wrong.length?`<button class="primary-button" data-action="review-start">오답 ${wrong.length}문제 다시 풀기 →</button><div class="review-list">${wrong.map(w=>`<article class="review-item"><span class="chip">${h(w.question.label)}</span><p>${h(w.question.prompt)}</p><small>정답을 맞히면 오답노트에서 빠집니다.</small></article>`).join('')}</div>`:'<div class="empty"><h3>다시 볼 문제가 아직 없어요.</h3><p>문제를 풀다 틀리면 이곳에 모입니다. 복습에서 정답을 맞히면 목록에서 빠집니다.</p><button class="primary-button" data-action="quiz-start">단원 문제 풀기</button></div>'}`;}
 function speakingPanel(){
- const textReading=state.texts[unit().id]?.reading;const source=textReading?.length?textReading:unit().reading;
+ const textReading=personalText()?.reading;const source=textReading?.length?textReading:unit().reading;
  if(!source.length)return pendingPanel();
  speechIndex%=source.length;const r=source[speechIndex];
  return `<div class="section-top"><h3>듣고, 따라 말하고, 비교해요.</h3><span class="chip">${textReading?.length?'내 본문':'자체 예문'} ${speechIndex+1} / ${source.length}</span></div><div class="speaking-card"><p class="en" lang="en">${h(r.en)}</p>${r.ko?`<p class="ko">${h(r.ko)}</p>`:''}<div class="speaking-controls"><button class="outline-button" data-action="speak-model">▷ 문장 듣기</button><button class="outline-button" data-action="speak-slow">▷ 천천히 듣기</button><button class="primary-button" id="recordButton" data-action="record">● 내 목소리 녹음</button></div><p class="record-state" id="recordState">녹음 후 내 목소리를 들어 보세요. 자동 발음 채점은 하지 않습니다.</p><div id="recordPlayback"></div><div class="quiz-bottom"><button class="text-button" data-action="speaking-prev">← 이전 문장</button><button class="text-button" data-action="speaking-next">다음 문장 →</button></div></div><p class="private-note">녹음은 이 화면에서만 재생되며 화면을 벗어나면 사라집니다. 서버로 업로드하지 않습니다.</p>`;
 }
 function pendingPanel(){return `<div class="empty"><h3>학습할 본문을 등록해 주세요.</h3><button class="primary-button" data-tab="text">내 본문 등록하기 →</button></div>`;}
 function textPanel(){
- const t=state.texts[unit().id];return `<div class="import-card"><span class="chip">나만의 본문</span><h3 style="margin-top:10px">교과서 본문을 넣어 공부하세요.</h3><p>영어 본문을 붙여 넣으면 문장을 나눠 듣기와 빈칸 연습을 만듭니다. 해석을 함께 넣으려면 한 줄에 <b>영어 문장 || 한국어 해석</b> 형식으로 입력하세요.</p><label for="textTitle">본문 제목</label><input id="textTitle" value="${h(t?.title||'')}" placeholder="예. 1과 본문"><label for="textContent">영어 본문 · 해석은 선택</label><textarea id="textContent" placeholder="English sentence. || 한국어 해석\n다음 문장은 새 줄에 입력하세요.">${h(t?.raw||'')}</textarea><p class="private-note">해석은 입력한 내용만 표시합니다. 자동 번역은 하지 않습니다.</p><div class="import-actions"><button class="primary-button" data-action="save-text">본문 저장하기</button><button class="outline-button" data-action="export-data">내 자료 백업</button><button class="outline-button" data-action="import-data">백업 불러오기</button>${t?'<button class="danger-button" data-action="delete-text">이 본문 삭제</button>':''}</div><input type="file" id="backupFile" class="backup-file" accept="application/json,.json"><p class="private-note">등록한 본문·오답·학습 기록은 이 브라우저에 저장됩니다. 다른 기기로 옮길 때는 백업 파일을 이용하세요. 브라우저 데이터를 지우면 사라집니다.</p><p id="importStatus" class="import-status" role="status"></p></div>${t?`<section class="import-reader"><div class="section-top"><h3>${h(t.title)} <span class="chip">${t.reading.length}문장</span></h3><button class="outline-button" data-action="text-quiz">본문 빈칸 연습 →</button></div>${readingTools('text')}${readerHTML(t.reading,'text')}</section>`:''}`;
+ const t=state.texts[unit().id];return `<div class="import-card"><span class="chip">나만의 본문</span><h3 style="margin-top:10px">교과서 본문을 넣어 공부하세요.</h3><p>영어 본문을 붙여 넣으면 문장을 나눠 듣기와 빈칸 연습을 만듭니다. 해석을 함께 넣으려면 한 줄에 <b>영어 문장 || 한국어 해석</b> 형식으로 입력하세요.</p><label for="textTitle">본문 제목</label><input id="textTitle" value="${h(t?.title||'')}" placeholder="예. 1과 본문"><label for="textContent">영어 본문 · 해석은 선택</label><textarea id="textContent" placeholder="English sentence. || 한국어 해석\n다음 문장은 새 줄에 입력하세요.">${h(t?.raw||'')}</textarea><p class="private-note">해석은 입력한 내용만 표시합니다. 자동 번역은 하지 않습니다.</p><div class="import-actions"><button class="primary-button" data-action="save-text">본문 저장하기</button><button class="outline-button" data-action="export-data">내 자료 백업</button><button class="outline-button" data-action="import-data">자료·백업 불러오기</button>${t?'<button class="danger-button" data-action="delete-text">이 본문 삭제</button>':''}</div><input type="file" id="backupFile" class="backup-file" accept="application/json,.json"><p class="private-note">등록한 본문·오답·학습 기록은 이 브라우저에 저장됩니다. 자료 파일은 학습 기록을 유지하며 추가합니다. 다른 기기로 옮길 때는 백업 파일을 이용하세요. 브라우저 데이터를 지우면 사라집니다.</p><p id="importStatus" class="import-status" role="status"></p></div>${t?`<section class="import-reader"><div class="section-top"><h3>${h(t.title)} <span class="chip">${t.reading.length}문장</span></h3><button class="outline-button" data-action="text-quiz">본문 빈칸 연습 →</button></div>${readingTools('text')}${readerHTML(t.reading,'text')}</section>`:''}`;
 }
 function renderPanel(){
  const u=unit();
@@ -153,7 +153,7 @@ function saveText(){
  const reading=splitText(raw);if(!reading.length||!reading.some(r=>/[A-Za-z]/.test(r.en))){toast('영어 문장을 포함한 본문을 입력해 주세요.');return;}
  const id=unit().id;const previous=state.texts[id];
  const title=$('#textTitle').value.trim()||`${route.number}과 개인 본문`;
- state.texts[id]={title,raw,reading,updated:Date.now()};
+ state.texts[id]={...previous,title,raw,reading,updated:Date.now()};
  if(!save()){if(previous)state.texts[id]=previous;else delete state.texts[id];return;}
  const obsolete=Object.keys(state.wrong).filter(k=>k.startsWith(`${id}:personal:`));obsolete.forEach(k=>delete state.wrong[k]);save();render();$('#importStatus').textContent=`${reading.length}문장을 이 기기에 저장했습니다.`;
 }
@@ -161,17 +161,34 @@ function exportData(){
  const blob=new Blob([JSON.stringify({app:'english-haru',publisher:B.code,version:1,state},null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`${B.repo}-개인학습-백업-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function prepareTexts(texts){
+ if(!texts||typeof texts!=='object'||Array.isArray(texts))throw Error('본문 데이터가 올바르지 않습니다.');
+ const result={};
+ for(const [id,t] of Object.entries(texts)){
+  if(!units.some(u=>u.id===id)||!t||typeof t.raw!=='string'||typeof t.title!=='string')throw Error('본문 데이터가 올바르지 않습니다.');
+  const item={...t,reading:splitText(t.raw),updated:Number(t.updated)||Date.now()};
+  if(t.activities){
+   if(typeof t.activities.raw!=='string'||typeof t.activities.title!=='string')throw Error('대화·활동 데이터가 올바르지 않습니다.');
+   item.activities={...t.activities,reading:splitText(t.activities.raw).filter(r=>/[A-Za-z]/.test(r.en))};
+  }
+  result[id]=item;
+ }
+ return result;
+}
 async function importData(file){
  if(!file)return;
  try{
   const backup=JSON.parse(await file.text());
   if(backup.app!=='english-haru'||backup.publisher!==B.code||backup.version!==1)throw Error('이 출판사의 백업 파일이 아닙니다.');
+  if(backup.kind==='materials'){
+   const texts=prepareTexts(backup.texts);
+   const previous=state;state={...state,texts:{...state.texts,...texts}};
+   if(!save()){state=previous;return;}
+   quiz=null;readingSection='body';render();toast(`${Object.keys(texts).length}개 단원 자료를 등록했습니다. 기존 학습 기록은 유지했습니다.`);return;
+  }
   const s=backup.state;
   if(!s||typeof s!=='object'||!s.texts||typeof s.texts!=='object'||!s.wrong||!s.known||!Number.isFinite(s.attempts)||!Number.isFinite(s.correct)||s.attempts<0||s.correct<0||s.correct>s.attempts)throw Error('백업 형식이 올바르지 않습니다.');
-  for(const [id,t] of Object.entries(s.texts)){
-    if(!units.some(u=>u.id===id)||typeof t.raw!=='string'||typeof t.title!=='string')throw Error('본문 데이터가 올바르지 않습니다.');
-    t.reading=splitText(t.raw);t.updated=Number(t.updated)||Date.now();
-  }
+  s.texts=prepareTexts(s.texts);
   for(const w of Object.values(s.wrong)){
     const q=w?.question;
     if(!q||typeof q.id!=='string'||typeof q.prompt!=='string'||typeof q.why!=='string'||!['choice','blank'].includes(q.type)||(q.type==='choice'&&(!Array.isArray(q.options)||q.options.length!==4||!q.options.every(x=>typeof x==='string')||!Number.isInteger(q.answer)||q.answer<0||q.answer>3))||(q.type==='blank'&&typeof q.answer!=='string'))throw Error('오답 데이터가 올바르지 않습니다.');
@@ -217,6 +234,7 @@ document.addEventListener('click',e=>{
  const action=b.dataset.action;
  if(b.dataset.say){speak(b.dataset.say);return;}
  if(b.dataset.grammarMode){grammarMode=b.dataset.grammarMode;renderPanel();return;}
+ if(b.dataset.readingSection){stopAudio();readingSection=b.dataset.readingSection;speechIndex=0;renderPanel();return;}
  if(b.dataset.readingLayout){readingLayout=b.dataset.readingLayout;renderPanel();return;}
  if(action==='grammar-quiz'){startQuiz('grammar');return;}
  if(action==='word-cards'||action==='word-list'){wordMode=action==='word-cards'?'cards':'list';renderPanel();return;}
@@ -234,7 +252,7 @@ document.addEventListener('click',e=>{
  if(b.dataset.wordSpeak!==undefined){speak(unit().words[Number(b.dataset.wordSpeak)].en);return;}
  if(b.dataset.grammarSpeak!==undefined){speak(unit().grammar[Number(b.dataset.grammarSpeak)].en);return;}
  if(b.dataset.readingSpeak!==undefined){speak(unit().reading[Number(b.dataset.readingSpeak)].en);return;}
- if(b.dataset.textSpeak!==undefined){speak(state.texts[unit().id].reading[Number(b.dataset.textSpeak)].en);return;}
+ if(b.dataset.textSpeak!==undefined){speak(personalText().reading[Number(b.dataset.textSpeak)].en);return;}
  if(b.dataset.known!==undefined){const id=`${unit().id}:${b.dataset.known}`;state.known[id]=!state.known[id];save();stats();renderPanel();renderCoach();return;}
  if(b.dataset.answer!==undefined){answer(Number(b.dataset.answer));return;}
  if(action==='sources')sourceDialog();
@@ -248,9 +266,9 @@ document.addEventListener('click',e=>{
  if(action==='toggle-translations'){translations=!translations;renderPanel();}
  if(action==='stop-audio')stopAudio();
  if(action==='reading-all')speakAll(unit().reading);
- if(action==='text-all')speakAll(state.texts[unit().id]?.reading||[]);
- if(['speak-model','speak-slow'].includes(action)){const rs=state.texts[unit().id]?.reading||unit().reading;speak(rs[speechIndex].en,action==='speak-slow'?.65:1);}
- if(['speaking-next','speaking-prev'].includes(action)){const rs=state.texts[unit().id]?.reading||unit().reading;stopAudio();stopRecording();speechIndex=(speechIndex+(action==='speaking-next'?1:rs.length-1))%rs.length;renderPanel();}
+ if(action==='text-all')speakAll(personalText()?.reading||[]);
+ if(['speak-model','speak-slow'].includes(action)){const rs=readingSource();speak(rs[speechIndex].en,action==='speak-slow'?.65:1);}
+ if(['speaking-next','speaking-prev'].includes(action)){const rs=readingSource();stopAudio();stopRecording();speechIndex=(speechIndex+(action==='speaking-next'?1:rs.length-1))%rs.length;renderPanel();}
  if(action==='record')record();
  if(action==='save-text')saveText();
  if(action==='export-data')exportData();

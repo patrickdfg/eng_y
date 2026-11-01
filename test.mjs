@@ -139,3 +139,37 @@ test('문법 오답 ID는 단원 선택에 따라 같은 다른 개념으로 덮
  const {run}=context();assert.notEqual(run('grammarQuestions([window.GRAMMAR_LIBRARY[0]],"grammar")[0].id'),run('grammarQuestions([window.GRAMMAR_LIBRARY[1]],"grammar")[0].id'));
  assert.equal(run('grammarQuestions([window.GRAMMAR_LIBRARY[1]],"grammar")[0].id'),run('grammarQuestions(window.GRAMMAR_LIBRARY,"grammar")[3].id'));
 });
+
+test('자료 묶음은 학습 기록과 다른 단원 자료를 유지하며 본문·대화를 등록한다',async()=>{
+ const {run}=context();
+ run('startQuiz();answer((quiz.items[0].answer+1)%4);state.known["kept"]=true;state.texts[units[1].id]={title:"기존 자료",raw:"Keep this sentence.",reading:splitText("Keep this sentence.")};');
+ const before=run('JSON.stringify({wrong:state.wrong,known:state.known,activity:state.activity,attempts:state.attempts})');
+ await run('importData({text:async()=>JSON.stringify({app:"english-haru",publisher:B.code,version:1,kind:"materials",texts:{[units[0].id]:{title:"본문",raw:"We explore the garden.\\nThe final sentence stays.",activities:{title:"대화",raw:"대화문\\nB: Where is the library?\\nG: It is next to the park."}}}})})');
+ assert.equal(run('JSON.stringify({wrong:state.wrong,known:state.known,activity:state.activity,attempts:state.attempts})'),before);
+ assert.equal(run('state.texts[units[1].id].title'),'기존 자료');
+ assert.equal(run('state.texts[units[0].id].activities.reading.length'),2);
+ assert.equal(run('state.texts[units[0].id].reading.at(-1).en'),'The final sentence stays.');
+ run('route={grade:1,number:1,tab:"reading"};readingSection="activities";startQuiz("text")');
+ assert.equal(run('quiz.items.length'),2);assert.ok(run('quiz.items[0].id.includes(":activities:")'));
+ assert.ok(run('speakingPanel().includes("Where is the library?")'));
+});
+
+test('자료의 출판사 또는 마지막 단원이 잘못되면 일부만 등록하지 않는다',async()=>{
+ const {run}=context();const before=run('JSON.stringify(state)');
+ await run('importData({text:async()=>JSON.stringify({app:"english-haru",publisher:B.code,version:1,kind:"materials",texts:{[units[0].id]:{title:"자료",raw:"Some text."},invalid:{title:"자료",raw:"Wrong unit."}}})})');
+ assert.equal(run('JSON.stringify(state)'),before);
+ await run('importData({text:async()=>JSON.stringify({app:"english-haru",publisher:"other",version:1,kind:"materials",texts:{}})})');
+ assert.equal(run('JSON.stringify(state)'),before);
+});
+
+test('대화 선택 뒤 본문 편집·백업 복원은 대화를 보존한다',async()=>{
+ const {run,nodes}=context();
+ run('state.texts[unit().id]={title:"본문",raw:"Original paragraph.",reading:splitText("Original paragraph."),activities:{title:"대화",raw:"B: Good morning.",reading:splitText("B: Good morning.")}};readingSection="activities";route.tab="text";renderPanel()');
+ run('$("#textTitle").value="수정 본문";$("#textContent").value="Edited paragraph.";saveText()');
+ assert.equal(run('personalText().reading[0].en'),'Edited paragraph.');
+ assert.equal(run('state.texts[unit().id].activities.raw'),'B: Good morning.');
+ await run('importData({text:async()=>JSON.stringify({app:"english-haru",publisher:B.code,version:1,state})})');
+ assert.equal(run('state.texts[unit().id].activities.reading[0].en'),'B: Good morning.');
+ run('route.tab="reading";readingSection="body"');
+ assert.ok(run('expandedReadingPanel().includes("Edited paragraph.")'));assert.ok(!run('expandedReadingPanel().includes("B: Good morning.")'));
+});
