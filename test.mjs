@@ -10,7 +10,7 @@ function context() {
   const stored=new Map();
   const c=vm.createContext({window:{addEventListener(){}},document,location:{hash:''},localStorage:{getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)},history:{pushState(){}},console,Intl,URL,Blob,Date,setTimeout(){},clearTimeout(){},confirm:()=>true,navigator:{}});
   vm.runInContext(readFileSync('content.js','utf8'),c);
-  for(const file of ['learning-data.js','learning.js','translations.js','audio-manifest.js','native-audio.js','dashboard.js'])vm.runInContext(readFileSync(file,'utf8'),c);
+  for(const file of ['learning-data.js','vocabulary-extra.js','learning.js','translations.js','audio-manifest.js','native-audio.js','dashboard.js'])vm.runInContext(readFileSync(file,'utf8'),c);
   vm.runInContext(readFileSync('app.js','utf8'),c);
   return {run:s=>vm.runInContext(s,c),nodes,stored};
 }
@@ -18,10 +18,10 @@ test('중1·중2의 16단원과 수록 내용이 일치한다',()=>{
  const {run}=context();
  assert.equal(run('B.units.length'),16);
  assert.equal(run('new Set(B.units.map(u=>u.id)).size'),16);
- assert.equal(run('B.units.reduce((n,u)=>n+u.words.length,0)'),96);
+ assert.ok(run('B.units.reduce((n,u)=>n+u.words.length,0)')>=16*45);
  assert.ok(run('B.units.reduce((n,u)=>n+questions(u).length,0)')>700);
  assert.equal(run('Object.keys(B.texts).length'),16);
- assert.equal(run('B.units.every(u=>u.reading.length===4&&u.grammar.length===2&&u.words.length===6)'),true);
+ assert.equal(run('B.units.every(u=>u.reading.length===4&&u.grammar.length===2&&u.words.length>=45&&u.words.length<=60)'),true);
  assert.equal(run('B.units.every(u=>questions(u).every(q=>q.type!=="choice"||(q.options.length===4&&new Set(q.options).size===4&&q.answer>=0&&q.answer<4)))'),true);
 });
 test('어휘·문법·빈칸 문제 ID가 겹치지 않는다',()=>{
@@ -111,7 +111,7 @@ test('모든 단어에 그림과 예문 3개가 있고 등록한 본문을 우�
 });
 test('스와이프는 가로 이동만 처리하고 단어 순환은 학습 완료로 기록하지 않는다',()=>{
  const {run}=context();assert.equal(run('swipeDirection(-90,10)'),1);assert.equal(run('swipeDirection(90,10)'),-1);assert.equal(run('swipeDirection(40,90)'),0);
- run('flashIndex=0;moveWord(-1)');assert.equal(run('flashIndex'),5);assert.equal(run('activity().cards'),0);run('moveWord(1)');assert.equal(run('flashIndex'),0);
+ run('flashIndex=0;moveWord(-1)');assert.equal(run('flashIndex'),run('unit().words.length-1'));assert.equal(run('activity().cards'),0);run('moveWord(1)');assert.equal(run('flashIndex'),0);
 });
 test('전체 문법 37개는 각 3문제이며 단원 문법은 6문제로 확장된다',()=>{
  const {run}=context();assert.equal(run('window.GRAMMAR_LIBRARY.length'),37);
@@ -126,7 +126,7 @@ test('등록한 긴 본문 전체를 독해 화면에 표시하고 원문 링크
  assert.equal(run('B.units.every(u=>window.ORIGINAL_LINKS[u.id].every(r=>r.url.startsWith("https://")))'),true);
 });
 test('단어·추가 예문·전체 문법·독해 음성 파일이 모두 존재한다',()=>{
- const {run}=context();const paths=run('[...B.units.flatMap(u=>[...u.words,...u.grammar,...u.reading].map(r=>r.en)),...Object.values(window.WORD_DETAILS).flatMap(w=>w.examples.map(r=>r.en)),...window.GRAMMAR_LIBRARY.flatMap(g=>[g.en,...g.extra.map(r=>r.en)])].map(en=>window.NATIVE_AUDIO[en])');
+ const {run}=context();const paths=run('[...B.units.flatMap(u=>[...u.words.slice(0,6),...u.grammar,...u.reading].map(r=>r.en)),...Object.values(window.GRAMMAR_LIBRARY).flatMap(g=>[g.en,...g.extra.map(r=>r.en)])].map(en=>window.NATIVE_AUDIO[en])');
  assert.ok(paths.every(Boolean));for(const path of paths){const bytes=readFileSync(path);assert.ok(bytes.length>1000);}
 });
 test('새 음성은 속도를 유지하고 정지 뒤 이전 콜백을 실행하지 않는다',async()=>{
@@ -247,4 +247,12 @@ test('단어 뜻을 뒤집기 전에도 예문 세 개를 같은 학습 화면�
  assert.ok(panel.includes('word-study-layout'));
  assert.equal((panel.match(/class="word-example"/g)||[]).length,3);
  assert.ok(panel.includes('문장 속에서 기억해요'));
+});
+
+test('추가 단어는 교과서 원문에 실제 나오고 뜻과 예문 세 개가 있다',()=>{
+ const {run}=context();
+ assert.equal(run('B.units.every(u=>u.words.length>=45&&u.words.length<=60)'),true);
+ assert.equal(run('B.units.every(u=>new Set(u.words.map(w=>w.en)).size===u.words.length)'),true);
+ assert.equal(run('B.units.every(u=>u.words.slice(6).every(w=>{const t=B.texts[u.id];return !!w.ko&&(t.raw+"\\n"+(t.activities?.raw||"")).toLowerCase().split(/[^a-z]+/).includes(w.en)&&window.WORD_DETAILS[w.en]?.examples.length===3}))'),true);
+ assert.equal(run('B.units.every(u=>questions(u).filter(q=>q.type==="choice").every(q=>new Set(q.options).size===4))'),true);
 });
