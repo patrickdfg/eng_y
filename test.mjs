@@ -256,3 +256,30 @@ test('추가 단어는 교과서 원문에 실제 나오고 뜻과 예문 세 �
  assert.equal(run('B.units.every(u=>u.words.slice(6).every(w=>{const t=B.texts[u.id];return !!w.ko&&(t.raw+"\\n"+(t.activities?.raw||"")).toLowerCase().split(/[^a-z]+/).includes(w.en)&&window.WORD_DETAILS[w.en]?.examples.length===3}))'),true);
  assert.equal(run('B.units.every(u=>questions(u).filter(q=>q.type==="choice").every(q=>new Set(q.options).size===4))'),true);
 });
+
+test('전체 글은 영어 줄마다 해석을 붙이고 교과서 예문의 해석을 찾는다',()=>{
+ const {run}=context();
+ run('route={grade:1,number:1,tab:"reading"};readingSection="body";readingLayout="passage";translations=true');
+ const panel=run('expandedReadingPanel()');
+ assert.ok(panel.indexOf('passage-translation')<panel.indexOf(run('h(B.texts[units[0].id].raw.split("\\n")[1])')));
+ assert.equal(run('B.units.every(u=>u.words.every(w=>window.WORD_DETAILS[w.en].examples.every(r=>Boolean(translationFor(r)))))'),true);
+});
+test('어휘 문제는 네 유형이고 단원의 보기가 반복되지 않는다',()=>{
+ const {run}=context();
+ assert.equal(run('B.units.every(u=>["","en","listen"].every(s=>vocabQuestions(u).some(q=>s?q.id.endsWith(":"+s):/:w\\d+$/.test(q.id))))'),true);
+ assert.ok(run('vocabQuestions(units[0]).some(q=>q.id.endsWith(":ex"))'));
+ assert.equal(run('B.units.flatMap(vocabQuestions).every(q=>q.options[q.answer]&&new Set(q.options).size===4&&q.options.every(Boolean))'),true);
+ assert.equal(run('B.units.flatMap(vocabQuestions).filter(q=>q.id.endsWith(":ex")).every(q=>q.prompt.includes("_____"))'),true);
+ const distinct=run('{const v=vocabQuestions(units[0]).filter(q=>/:w\\d+$/.test(q.id));new Set(v.map(q=>[...q.options].sort().join("|"))).size/v.length}');
+ assert.ok(distinct>.9);
+});
+test('단원 문제는 20문제 세트로 이어 풀고 틀린 문제를 먼저 낸다',()=>{
+ const {run}=context();
+ run('startQuiz()');assert.equal(run('quiz.items.length'),20);assert.equal(run('new Set(quiz.items.map(q=>q.id)).size'),20);
+ assert.ok(run('quiz.items.some(q=>q.type==="blank")'));
+ run('const first=quiz.items[0];answer((first.answer+1)%4);quiz.index=quiz.items.length-1;quiz.answered=true;');
+ run('quiz.complete=true;state.quizSets={[unit().id]:quiz.set.next}');
+ const before=run('quiz.items.slice(1).map(q=>q.id).join()');
+ run('startQuiz()');assert.equal(run('quiz.items[0].id'),run('first.id'));assert.notEqual(run('quiz.items.slice(1).map(q=>q.id).join()'),before);
+ assert.equal(run('quiz.set.number'),2);
+});

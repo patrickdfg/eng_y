@@ -28,7 +28,15 @@ const units = B.units;
 B.texts=prepareTexts(B.texts||{});
 
 const fixedTranslations = window.APP_TRANSLATIONS || {};
-function translationFor(r) { return r.ko || fixedTranslations[r.en] || ''; }
+const speakerLabel=/^[A-Z][A-Za-z .]{0,20}:\s*/;
+const looseTranslations={};
+for(const [en,ko] of Object.entries(fixedTranslations))if(speakerLabel.test(en))looseTranslations[en.replace(speakerLabel,'')]??=ko.replace(/^[^:]{1,20}:\s*/,'');
+function translationLookup(en){return fixedTranslations[en]||looseTranslations[en.replace(speakerLabel,'')]||'';}
+function translationFor(r) {
+ const whole=r.ko||translationLookup(r.en);if(whole)return whole;
+ const parts=splitText(r.en).map(p=>translationLookup(p.en));
+ return parts.length>1&&parts.every(Boolean)?parts.join(' '):'';
+}
 
 function unit(){return units.find(u=>u.grade===route.grade&&u.number===route.number);}
 function save(){
@@ -97,31 +105,59 @@ function cloze(r,id,label){
  const answer=candidates[Math.floor(candidates.length/2)]||words[words.length-1];
  if(!answer)return null;
  const prompt=r.en.replace(new RegExp(`\\b${answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\b`),'_____');
- return {id,type:'blank',label,prompt,ko:r.ko||'',answer,why:r.en};
+ return {id,type:'blank',label,prompt,ko:translationFor(r),answer,why:r.en};
 }
+function wordGroup(ko){return /다$/.test(ko)?'verb':/(한|운|은|는|인|른|쁜|픈|된|온)$/.test(ko)?'adj':'noun';}
+function seeded(text){let n=7;for(const c of text)n=(Math.imul(n,31)+c.charCodeAt(0))>>>0;n^=n>>>13;n=Math.imul(n,0x5bd1e995)>>>0;return (n^n>>>15)>>>0;}
+function distractorPool(u,w,key){
+ const same=x=>wordGroup(x.ko)===wordGroup(w.ko)&&x.en!==w.en&&x.ko!==w.ko;
+ const near=u.words.filter(same);
+ const wide=units.filter(o=>o.grade===u.grade&&o.id!==u.id).flatMap(o=>o.words.filter(same));
+ return [...near.map(x=>x[key]),...(near.length<6?wide.map(x=>x[key]):[])];
+}
+function pickOptions(pool,right,seed){
+ const list=pool.filter((v,i,a)=>v!==right&&a.indexOf(v)===i),options=[];
+ for(let i=0;options.length<3;i++)options.push(list.splice((seed+i*7)%list.length,1)[0]);
+ const answer=seed%4;options.splice(answer,0,right);return {options,answer};
+}
+const vocabCache=new Map();
+function vocabQuestions(u){if(vocabCache.has(u.id))return vocabCache.get(u.id);const made=u.words.flatMap((w,i)=>{
+ const make=(suffix,label,prompt,key,right,extra={})=>({id:`${u.id}:w${i}${suffix}`,type:'choice',label,prompt,why:`${w.en} = ${w.ko}`,...pickOptions(distractorPool(u,w,key),right,seeded(w.en+suffix)),...extra});
+ const out=[make('','어휘 · 뜻 고르기',`${w.en}의 뜻은 무엇인가요?`,'ko',w.ko),make(':en','어휘 · 영어 고르기',`'${w.ko}'에 맞는 영어 단어는 무엇인가요?`,'en',w.en),make(':listen','어휘 · 듣기','단어를 듣고 뜻을 고르세요.','ko',w.ko,{audio:w.en})];
+ const word=w.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const sample=window.WORD_DETAILS[w.en]?.examples.find(r=>r.source!=='추가 학습 문장'&&new RegExp(`\\b${word}\\b`,'i').test(r.en));
+ if(sample)out.push(make(':ex','어휘 · 예문 빈칸',sample.en.replace(new RegExp(`\\b${word}\\b`,'gi'),'_____'),'en',w.en,{ko:translationFor(sample),why:sample.en}));
+ return out;
+});vocabCache.set(u.id,made);return made;}
 function questions(u){
- const out=u.words.map((w,i)=>{
- const distractors=[...new Set(u.words.filter((_,j)=>j!==i).map(v=>v.ko).filter(ko=>ko!==w.ko))].slice(0,3);
-  const options=[w.ko,...distractors];
- const shift=i%4;const rotated=options.slice(shift).concat(options.slice(0,shift));
- return {id:`${u.id}:w${i}`,type:'choice',label:'어휘',prompt:`${w.en}의 뜻은 무엇인가요?`,options:rotated,answer:rotated.indexOf(w.ko),why:`${w.en} = ${w.ko}`};
- });
+ const out=[...vocabQuestions(u)];
  u.grammar.forEach((g,i)=>out.push({id:`${u.id}:g${i}`,type:'choice',label:'문법',prompt:g.question,options:g.options,answer:g.answer,why:g.why}));
  u.grammar.forEach((g,i)=>{const topic=window.GRAMMAR_LIBRARY.find(t=>t.title===g.title);out.push(...grammarQuestions([topic],`${u.id}:gx${i}`).slice(1));});
  (B.texts[u.id]?.reading||u.reading).forEach((r,i)=>{const q=cloze(r,`${u.id}:${B.texts[u.id]?'book:':''}r${i}`,'문장 빈칸');if(q)out.push(q);});return out;
 }
+function quizSet(){
+ const pool=questions(unit()),at=state.quizSets?.[unit().id]||{v:0,g:0,b:0,n:0};
+ const vocab=pool.filter(q=>/:w\d+/.test(q.id)).sort((a,b)=>seeded(a.id)-seeded(b.id)),sentence=pool.filter(q=>/:(book:)?r\d+$/.test(q.id)),grammar=pool.filter(q=>!vocab.includes(q)&&!sentence.includes(q));
+ const wrong=pool.filter(q=>state.wrong[q.id]).slice(0,5);
+ const take=(list,start,count)=>{const out=[];for(let i=0;i<list.length&&out.length<count;i++){const q=list[(start+i)%list.length];if(!wrong.includes(q))out.push(q);}return out;};
+ const g=take(grammar,at.g,4),b=take(sentence,at.b,4),v=take(vocab,at.v,20-wrong.length-g.length-b.length),others=[...g,...b];
+ const items=[...wrong];v.forEach((q,i)=>{items.push(q);if(i%3===2&&others.length)items.push(others.shift());});items.push(...others);
+ const total=Math.ceil(vocab.length/12);
+ return {items,number:at.n%total+1,total,size:pool.length,counts:{vocab:vocab.length,grammar:grammar.length,sentence:sentence.length},next:{v:(at.v+v.length)%vocab.length,g:grammar.length?(at.g+g.length)%grammar.length:0,b:sentence.length?(at.b+b.length)%sentence.length:0,n:at.n+1}};
+}
 function startQuiz(mode='unit'){
- let qs=mode==='grammar'?grammarQuestions(grammarTopics(),'grammar'):mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(personalText()?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${(state.texts[unit().id]||B.texts[unit().id]).updated}:${route.tab==='text'?'body':readingSection}:${i}`,state.texts[unit().id]?'내 본문 빈칸':'교과서 본문 빈칸')).filter(Boolean):questions(unit());
+ const set=mode==='unit'?quizSet():null;
+ let qs=set?set.items:mode==='grammar'?grammarQuestions(grammarTopics(),'grammar'):mode==='review'?Object.values(state.wrong).map(w=>w.question):mode==='text'?(personalText()?.reading||[]).map((r,i)=>cloze(r,`${unit().id}:personal:${(state.texts[unit().id]||B.texts[unit().id]).updated}:${route.tab==='text'?'body':readingSection}:${i}`,state.texts[unit().id]?'내 본문 빈칸':'교과서 본문 빈칸')).filter(Boolean):questions(unit());
  if(!qs.length){toast(mode==='review'?'복습할 오답이 아직 없습니다.':'학습할 문장이 아직 없습니다.');return;}
- quiz={items:qs,index:0,right:0,answered:false,feedback:null,mode,complete:false};
+ quiz={items:qs,index:0,right:0,answered:false,feedback:null,mode,complete:false,set};
  if(route.tab!=='quiz'){route.tab='quiz';history.pushState(null,'',`#${route.grade}/${route.number}/quiz`);state.last=`${route.grade}/${route.number}/quiz`;save();}
  render();
 }
 function quizPanel(){
- if(!quiz)return `<div class="quiz-intro"><span class="chip">SMALL STEPS, REAL PROGRESS</span><h3 style="margin-top:15px">배운 내용을 확인해 볼까요?</h3><p class="subtle">바로 채점하고 틀린 문제는 오답노트에 모아 드려요.</p><div class="quiz-types"><span>어휘 ${unit().words.length}문제</span><span>문법 ${unit().grammar.length*3}문제</span><span>문장 빈칸 ${questions(unit()).filter(q=>q.id.includes(':book:')||/:r\d+$/.test(q.id)).length}문제</span></div><button class="primary-button" data-action="begin-quiz">${questions(unit()).length}문제 시작하기 →</button></div>`;
- if(quiz.complete)return `<div class="result"><span class="chip">오늘의 연습 완료</span><h3>${quiz.mode==='review'?'오답을 다시 살펴봤어요.':'한 걸음 더 가까워졌어요.'}</h3><strong>${Math.round(quiz.right/quiz.items.length*100)}<span style="font-size:22px">점</span></strong><p>${quiz.items.length}문제 중 ${quiz.right}문제 정답 · 틀린 문제는 오답노트에서 복습하세요.</p><div class="actions"><button class="primary-button" data-action="review-start">오답 다시 풀기</button><button class="outline-button" data-action="quiz-retry">한 번 더 연습</button><button class="outline-button" data-tab="words">단어로 돌아가기</button></div></div>`;
+ if(!quiz){const set=quizSet();return `<div class="quiz-intro"><span class="chip">세트 ${set.number} / ${set.total}</span><h3 style="margin-top:15px">배운 내용을 확인해 볼까요?</h3><p class="subtle">단원 전체 ${set.size}문제를 20문제씩 나눠 풀어요. 지난번에 틀린 문제가 먼저 나옵니다.</p><div class="quiz-types"><span>어휘 ${set.counts.vocab}문제</span><span>문법 ${set.counts.grammar}문제</span><span>문장 빈칸 ${set.counts.sentence}문제</span></div><button class="primary-button" data-action="begin-quiz">${set.items.length}문제 시작하기 →</button></div>`;}
+ if(quiz.complete)return `<div class="result"><span class="chip">오늘의 연습 완료</span><h3>${quiz.mode==='review'?'오답을 다시 살펴봤어요.':'한 걸음 더 가까워졌어요.'}</h3><strong>${Math.round(quiz.right/quiz.items.length*100)}<span style="font-size:22px">점</span></strong><p>${quiz.items.length}문제 중 ${quiz.right}문제 정답 · 틀린 문제는 오답노트에서 복습하세요.</p><div class="actions">${quiz.set?'<button class="primary-button" data-action="next-set">다음 20문제 →</button>':''}<button class="${quiz.set?'outline':'primary'}-button" data-action="review-start">오답 다시 풀기</button><button class="outline-button" data-action="quiz-retry">한 번 더 연습</button><button class="outline-button" data-tab="words">단어로 돌아가기</button></div></div>`;
  const q=quiz.items[quiz.index];
- return `<div class="quiz-card"><div class="quiz-meta"><span>${h(q.label)} · ${quiz.mode==='review'?'전체 학년 오답 복습':quiz.mode==='text'?'본문 연습':'단원 연습'}</span><span>${quiz.index+1} / ${quiz.items.length}</span></div><progress value="${quiz.index}" max="${quiz.items.length}" aria-label="문제 진행률"></progress><h3>${h(q.prompt)}</h3>${q.type==='blank'&&q.ko?`<p class="prompt-ko">${h(q.ko)}</p>`:''}${q.type==='choice'?`<div class="options">${q.options.map((option,i)=>`<button class="option ${quiz.answered&&i===q.answer?'correct':''} ${quiz.answered&&quiz.selected===i&&i!==q.answer?'incorrect':''}" data-answer="${i}" ${quiz.answered?'disabled':''}><span>${i+1}</span>${h(option)}</button>`).join('')}</div>`:`<form id="blankForm" class="blank-form"><label class="screen-reader" for="blankAnswer">빈칸에 들어갈 영어 단어</label><input id="blankAnswer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="빈칸에 들어갈 단어" ${quiz.answered?'disabled':''} required><button class="primary-button" ${quiz.answered?'disabled':''}>정답 확인</button></form>`}${quiz.answered?`<div class="feedback ${quiz.feedback.correct?'':'bad'}" role="status"><strong>${quiz.feedback.correct?'✓ 정답이에요!':'다시 기억해 두세요.'}</strong><p>${q.type==='blank'?`정답 · ${h(q.answer)}<br>`:''}${h(q.why)}</p></div>`:''}<div class="quiz-bottom"><button class="text-button" data-action="quiz-exit">연습 종료</button>${quiz.answered?`<button class="primary-button" data-action="quiz-next">${quiz.index===quiz.items.length-1?'결과 보기':'다음 문제 →'}</button>`:'<span class="subtle">차근차근 풀어 보세요.</span>'}</div></div>`;
+ return `<div class="quiz-card"><div class="quiz-meta"><span>${h(q.label)} · ${quiz.mode==='review'?'전체 학년 오답 복습':quiz.mode==='text'?'본문 연습':'단원 연습'}</span><span>${quiz.index+1} / ${quiz.items.length}</span></div><progress value="${quiz.index}" max="${quiz.items.length}" aria-label="문제 진행률"></progress><h3>${h(q.prompt)}</h3>${q.audio?`<button class="outline-button quiz-listen" data-say="${h(q.audio)}">▷ 단어 듣기</button>`:''}${q.ko?`<p class="prompt-ko">${h(q.ko)}</p>`:''}${q.type==='choice'?`<div class="options">${q.options.map((option,i)=>`<button class="option ${quiz.answered&&i===q.answer?'correct':''} ${quiz.answered&&quiz.selected===i&&i!==q.answer?'incorrect':''}" data-answer="${i}" ${quiz.answered?'disabled':''}><span>${i+1}</span>${h(option)}</button>`).join('')}</div>`:`<form id="blankForm" class="blank-form"><label class="screen-reader" for="blankAnswer">빈칸에 들어갈 영어 단어</label><input id="blankAnswer" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="빈칸에 들어갈 단어" ${quiz.answered?'disabled':''} required><button class="primary-button" ${quiz.answered?'disabled':''}>정답 확인</button></form>`}${quiz.answered?`<div class="feedback ${quiz.feedback.correct?'':'bad'}" role="status"><strong>${quiz.feedback.correct?'✓ 정답이에요!':'다시 기억해 두세요.'}</strong><p>${q.type==='blank'?`정답 · ${h(q.answer)}<br>`:''}${h(q.why)}</p></div>`:''}<div class="quiz-bottom"><button class="text-button" data-action="quiz-exit">연습 종료</button>${quiz.answered?`<button class="primary-button" data-action="quiz-next">${quiz.index===quiz.items.length-1?'결과 보기':'다음 문제 →'}</button>`:'<span class="subtle">차근차근 풀어 보세요.</span>'}</div></div>`;
 }
 function answer(value){
  if(!quiz||quiz.answered||quiz.complete)return;
@@ -268,8 +304,9 @@ document.addEventListener('click',e=>{
  if(['begin-quiz','quiz-start'].includes(action))startQuiz();
  if(action==='review-start')startQuiz('review');
  if(action==='text-quiz')startQuiz('text');
- if(action==='quiz-next'&&quiz?.answered){if(quiz.index===quiz.items.length-1)quiz.complete=true;else{quiz.index++;quiz.answered=false;quiz.feedback=null;}renderPanel();}
- if(action==='quiz-retry'&&quiz){const mode=quiz.mode;startQuiz(mode);}
+ if(action==='quiz-next'&&quiz?.answered){if(quiz.index===quiz.items.length-1){quiz.complete=true;if(quiz.set){state.quizSets={...state.quizSets,[unit().id]:quiz.set.next};save();}}else{quiz.index++;quiz.answered=false;quiz.feedback=null;}renderPanel();}
+ if(action==='next-set')startQuiz();
+ if(action==='quiz-retry'&&quiz){if(quiz.set){quiz={...quiz,index:0,right:0,answered:false,feedback:null,complete:false};renderPanel();}else{const mode=quiz.mode;startQuiz(mode);}}
  if(action==='quiz-exit'){quiz=null;renderPanel();}
  if(action==='toggle-translations'){translations=!translations;renderPanel();}
  if(action==='stop-audio')stopAudio();

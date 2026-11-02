@@ -89,3 +89,5 @@
  body.word-study-view .example-label .icon-button{width:29px;height:28px}
  body.word-study-view .word-examples .private-note,body.word-study-view #panel>.private-note{display:none}
 }
+.full-passage .passage-translation{margin:5px 0 18px;border:0;padding:0;color:#55525f;font-size:14px;line-height:1.6}
+.quiz-listen{margin:0 0 14px}
