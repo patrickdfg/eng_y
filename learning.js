@@ -5,14 +5,14 @@ let readingLayout='passage';
 let readingSection='body';
 let wordGesture=null;
 function wordExamples(w){
- const examples=window.WORD_DETAILS[w.en].examples.map(r=>({...r,source:'자체 예문'}));
+ const examples=window.WORD_DETAILS[w.en].examples.map(r=>({...r,source:r.source||'자체 예문'}));
  const pattern=new RegExp('\\b'+w.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
  const original=(state.texts[unit().id]||B.texts[unit().id])?.reading.find(r=>pattern.test(r.en));
  if(original)examples[0]={...original,source:state.texts[unit().id]?'등록한 본문에서':'교과서 본문에서'};
  return examples;
 }
 function wordPicture(w){return `<svg class="word-picture" viewBox="0 0 180 110" role="img" aria-label="${h(w.ko)} 그림 힌트"><rect x="18" y="8" width="144" height="94" rx="32" fill="currentColor" opacity=".07"/><circle cx="149" cy="22" r="12" fill="currentColor" opacity=".12"/><circle cx="29" cy="83" r="7" fill="currentColor" opacity=".2"/><text x="90" y="79" text-anchor="middle" font-size="66" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif">${window.WORD_DETAILS[w.en].picture}</text></svg>`;}
-function wordExampleHTML(w){return `<section class="word-examples"><div class="section-top"><h3>문장 속에서 기억해요</h3><span class="chip">예문 3개</span></div>${wordExamples(w).map((r,i)=>`<article class="word-example"><div class="example-label"><span>${String(i+1).padStart(2,'0')} · ${i===0?r.source:'추가 예문'}</span><button class="icon-button" data-say="${h(r.en)}" aria-label="${i+1}번 예문 듣기">${icon('sound')}</button></div><p lang="en">${h(r.en)}</p>${r.ko?`<p class="example-ko">${h(r.ko)}</p>`:''}</article>`).join('')}<p class="private-note">교과서 본문에 이 단어가 있으면 첫 번째 예문에 연결합니다. 직접 등록한 본문이 있으면 우선 사용합니다. 나머지는 별도로 작성한 연습 문장입니다.</p></section>`;}
+function wordExampleHTML(w){return `<section class="word-examples"><div class="section-top"><h3>문장 속에서 기억해요</h3><span class="chip">예문 3개</span></div>${wordExamples(w).map((r,i)=>`<article class="word-example"><div class="example-label"><span>${String(i+1).padStart(2,'0')} · ${r.source}</span><button class="icon-button" data-say="${h(r.en)}" aria-label="${i+1}번 예문 듣기">${icon('sound')}</button></div><p lang="en">${h(r.en)}</p>${translationFor(r)?`<p class="example-ko">${h(translationFor(r))}</p>`:''}</article>`).join('')}<p class="private-note">교과서 본문에 이 단어가 있으면 첫 번째 예문에 연결합니다. 직접 등록한 본문이 있으면 우선 사용합니다. 나머지는 교과서에 나온 문장 또는 별도로 만든 연습 문장입니다.</p></section>`;}
 function moveWord(direction){stopAudio();flashIndex=(flashIndex+direction+unit().words.length)%unit().words.length;flashRevealed=false;renderPanel();}
 function swipeDirection(dx,dy){return Math.abs(dx)>=60&&Math.abs(dx)>Math.abs(dy)*1.5?(dx<0?1:-1):0;}
 document.addEventListener('pointerdown',e=>{if(e.isPrimary===false||!e.target.closest('.flashcard')||e.target.closest('button'))return;wordGesture={x:e.clientX,y:e.clientY,id:e.pointerId};});
